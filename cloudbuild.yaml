@@ -1,13 +1,14 @@
+# cloudbuild.yaml
 options:
-  logging: CLOUD_LOGGING_ONLY   # <-- ปิด requirement logs bucket
+  logging: CLOUD_LOGGING_ONLY   # ตัด requirement เรื่อง logs bucket
 
 steps:
   - name: gcr.io/kaniko-project/executor:latest
     args:
-      - --destination=${_IMAGE_URI}
-      - --dockerfile=./Dockerfile   # แก้ path ถ้า Dockerfile ไม่ได้อยู่ root
+      - --destination=asia-southeast1-docker.pkg.dev/$PROJECT_ID/etl-repo/student-info-etl:$SHORT_SHA
+      - --dockerfile=./Dockerfile
       - --context=.
       - --cache=true
 
 images:
-  - '${_IMAGE_URI}'
+  - asia-southeast1-docker.pkg.dev/$PROJECT_ID/etl-repo/student-info-etl:$SHORT_SHA

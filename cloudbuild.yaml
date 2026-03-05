@@ -5,5 +5,13 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', '${_IMAGE_URI}', '.']
 
+steps:
+  - name: gcr.io/kaniko-project/executor:latest
+    args:
+      - --destination=${_IMAGE_URI}
+      - --dockerfile=./Dockerfile   # แก้ path ถ้า Dockerfile ไม่ได้อยู่ root
+      - --context=.
+      - --cache=true
+
 images:
   - '${_IMAGE_URI}'

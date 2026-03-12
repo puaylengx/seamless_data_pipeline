@@ -1,9 +1,0 @@
-python-dotenv
-pandas
-pyarrow
-sqlalchemy
-# สำหรับ SQL Server (ถ้าใช้ pymssql ก็เปลี่ยนเป็น pymssql)
-pyodbc
-
-google-cloud-bigquery
-google-cloud-storage

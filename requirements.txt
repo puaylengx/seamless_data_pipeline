@@ -1,0 +1,9 @@
+apache-airflow
+apache-airflow-providers-microsoft-mssql
+apache-airflow-providers-google
+apache-airflow-task-sdk
+pandas
+pyarrow
+pymssql
+# ถ้า MsSqlHook ใช้ pymssql ในสภาพแวดล้อมของคุณ
+google-cloud-bigquery

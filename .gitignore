@@ -6,3 +6,4 @@ __pycache__
 
 config/*
 logs/*
+/dags/data/student_information

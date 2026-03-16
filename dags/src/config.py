@@ -2,6 +2,10 @@
 from __future__ import annotations
 from airflow.models import Variable
 from pathlib import Path
+from dataclasses import dataclass
+from airflow.models import Variable
+from airflow.hooks.base import BaseHook
+
 
 # ---- Airflow Variables (มี default เผื่อยังไม่ได้ตั้งใน UI) ----
 GCP_PROJECT      = Variable.get("BQ_PROJECT", default_var="muic-data-prod")
@@ -21,3 +25,28 @@ DATA_DIR         = Path(
 # สร้างโฟลเดอร์ปลายทางการทำงาน (extract/transform) หากยังไม่มี
 (DATA_DIR / "extract").mkdir(parents=True, exist_ok=True)
 (DATA_DIR / "transform").mkdir(parents=True, exist_ok=True)
+
+@dataclass
+class JobConfig:
+    target_schema: str = "dbo"
+    target_table: str = "finance_invoice_20251110"
+    key_col: str = "invoiceId"
+    batch_size: int = 1000
+
+@dataclass
+class PathConfig:
+    # ที่เก็บไฟล์ระหว่าง task (ควรเป็น shared volume ของ worker)
+    workdir: str = "/opt/airflow/data/finance_invoice"
+
+def get_conn(conn_id: str):
+    # ดึง Connection จาก Airflow
+    return BaseHook.get_connection(conn_id)
+
+def get_job_config() -> JobConfig:
+    # ตั้งค่า override ได้ผ่าน Airflow Variable
+    return JobConfig(
+        target_schema=Variable.get("FIN_INV_TARGET_SCHEMA", default_var="dbo"),
+        target_table=Variable.get("FIN_INV_TARGET_TABLE", default_var="finance_invoice_20251110"),
+        key_col=Variable.get("FIN_INV_KEY_COL", default_var="invoiceId"),
+        batch_size=int(Variable.get("FIN_INV_BATCH_SIZE", default_var="1000")),
+    )

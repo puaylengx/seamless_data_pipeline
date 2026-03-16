@@ -3,6 +3,7 @@ from __future__ import annotations
 import pendulum
 from pathlib import Path
 import pandas as pd
+import logging
 
 from airflow.sdk import dag, task, get_current_context
 
@@ -15,11 +16,16 @@ from src.education.student_information.transformers.student_information import t
 from src.education.student_information.validators.student_information import validate_student_information
 from src.education.student_information.loaders.student_information_bigquery import load_dataframe_to_bq
 from src.education.student_information.helpers.logger import get_logger
-
+from _callbacks import on_task_failure_callback, on_task_success_callback, on_dag_success_callback
+from utils_recipients import resolve_recipients
 
 # logger = get_logger("student_information_dag")
-logger = get_logger()
+logger = logging.getLogger("airflow.task")
 TZ = "Asia/Bangkok"
+
+# ✅ อ่านผู้รับจาก ENV → ถ้าไม่มี → จาก Variable → ถ้าไม่มี → ใช้ fallback
+DEFAULT_RECIPIENTS = resolve_recipients()
+logger.info("Summary recipients: %s", DEFAULT_RECIPIENTS)
 
 default_args = {
     "owner": "data-eng",
@@ -28,10 +34,17 @@ default_args = {
 
 @dag(
     dag_id="student_information_pipeline",
+    start_date=pendulum.datetime(2026, 3, 1, tz=TZ),
     schedule="@daily",
-    start_date=pendulum.datetime(2024, 1, 1, tz=TZ),
     catchup=False,
-    default_args=default_args,
+    # default_args=default_args,
+    default_args={
+        "on_failure_callback": on_task_failure_callback,
+        "on_success_callback": on_task_success_callback,
+        "email_on_success": False,
+        "email_on_failure": False,
+    },
+    on_success_callback=on_dag_success_callback,
     params={  # <<< กำหนดค่ามาตรฐาน (แก้ได้ตอน Trigger)
         "statuses": ["dm","ex","g","la","np","prc","pa","rs","s"],
         "min_academic_year": 2016,
@@ -40,8 +53,11 @@ default_args = {
     tags=["education", "student_information"],
 )
 def student_information_pipeline():
-    @task()
-    def extract() -> str:
+    @task(
+        retries=1,
+        on_success_callback=on_task_success_callback  # ถ้าต้องการอีเมลเมื่อสำเร็จ
+    )
+    def extract() -> dict:
         """
         ดึงข้อมูลจาก SQL Server แล้วบันทึกเป็น Parquet
         return: path ของไฟล์ parquet
@@ -63,44 +79,54 @@ def student_information_pipeline():
         out_path = DATA_DIR / "extract" / f"student_info_{run_id}.parquet"
         out_path.parent.mkdir(parents=True, exist_ok=True)
         df.to_parquet(out_path, index=False)
-        logger.info("Extracted rows: %s → %s", len(df), out_path)
-        return str(out_path)
 
-    @task()
-    def transform(in_path: str) -> str:
-        """
-        อ่าน Parquet ที่ extract แล้ว transform และเขียนเป็น Parquet ใหม่
-        return: path ของไฟล์ parquet ใหม่
-        """
+        msg = f"Extracted rows: {len(df)} → {out_path}"
+        logger.info(msg)
+        return {"rows": int(len(df)), "path": str(out_path), "message": msg}
+
+    @task(
+        retries=1,
+        on_success_callback=on_task_success_callback  # ถ้าต้องการอีเมลเมื่อสำเร็จ
+    )
+    def transform(in_obj: dict) -> dict:
+        in_path = in_obj["path"]
         df = pd.read_parquet(in_path)
         df_t = transform_student_information(df)
+
         out_path = Path(in_path.replace("/extract/", "/transform/").replace("student_info_", "student_info_t_"))
         out_path.parent.mkdir(parents=True, exist_ok=True)
         df_t.to_parquet(out_path, index=False)
-        logger.info("Transformed rows: %s → %s", len(df_t), out_path)
-        return str(out_path)
 
-    @task()
-    def validate(in_path: str) -> str:
+        msg = f"Transformed rows: {len(df_t)} → {out_path}"
+        logger.info(msg)
+        return {"rows": int(len(df_t)), "path": str(out_path), "message": msg}
+
+
+    @task(
+        retries=1,
+        on_success_callback=on_task_success_callback  # ถ้าต้องการอีเมลเมื่อสำเร็จ
+    )
+    def validate(in_obj: dict) -> dict:
+        in_path = in_obj["path"]
         df = pd.read_parquet(in_path)
         validate_student_information(df)
-        logger.info("Validation passed for %s records", len(df))
-        return in_path  # ส่งต่อ path เดิมถ้าผ่าน
-    
 
-    @task()
-    def load(in_path: str, write_disposition: str = "WRITE_TRUNCATE") -> None:
-        import pandas as pd
+        msg = f"Validation passed for {len(df)} records"
+        logger.info(msg)
+        return {"rows": int(len(df)), "path": in_path, "message": msg}
+
+
+    @task(
+        retries=1,
+        on_success_callback=on_task_success_callback  # ถ้าต้องการอีเมลเมื่อสำเร็จ
+    )
+    def load(in_obj: dict, write_disposition: str = "WRITE_TRUNCATE") -> dict:
         import pendulum
-        df = pd.read_parquet(in_path)
+        df = pd.read_parquet(in_obj["path"])
 
-        # --- ให้แน่ใจว่ามี 'ingestion_date' สำหรับ table ที่ partition ด้วย field นี้ ---
         if "ingestion_date" not in df.columns:
-            # ใช้วันรันเป็นค่า ingestion_date (หรือเลือก field วันที่ในข้อมูลจริง ถ้ามี)
             df["ingestion_date"] = pd.to_datetime(pendulum.now("Asia/Bangkok").date())
 
-        # --- (ถ้า “ตารางเดิม” ยังมี clustering ที่อ้าง column 'code'
-        #      แต่ใน pipeline เรารีเนมเป็น 'student_id') ให้เติม 'code' กลับมาเพื่อให้ clustering ทำงานได้เต็มที่ ---
         if "code" not in df.columns and "student_id" in df.columns:
             df["code"] = df["student_id"]
 
@@ -113,9 +139,11 @@ def student_information_pipeline():
             write_disposition=write_disposition,
             location="asia-southeast1",
         )
-        
-        # ✅ บันทึกผลลัพธ์ด้วย task logger (จะขึ้น prefix เป็น INFO ถูกต้อง)
-        logger.info("Loaded to BigQuery %s.%s.%s (%s rows)",GCP_PROJECT, BQ_DATASET, BQ_TABLE, len(df))
+
+        msg = f"Loaded to BigQuery {GCP_PROJECT}.{BQ_DATASET}.{BQ_TABLE} ({len(df)} rows)"
+        logger.info(msg)
+        return {"rows": int(len(df)), "path": in_obj["path"], "message": msg}
+
 
     # ---- Orchestration ----
     p1 = extract()

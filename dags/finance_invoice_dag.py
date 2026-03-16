@@ -16,6 +16,10 @@ from src.dgsi.finance_invoice.loaders.finance_invoice_sql import (
 )
 
 from src.dgsi.finance_invoice.helpers.audit import write_audit_line
+
+# for send email
+from src.dgsi.finance_invoice.helpers.emailer import load_email_config_from_env, send_summary_email
+
 TZ = "Asia/Bangkok"
 
 @dag(
@@ -110,9 +114,23 @@ def finance_invoice_etl():
             "target": f"{schema}.{job.target_table}"
         }
 
+
+    @task(retries=0)  # ในฟังก์ชันมี retry 3 ครั้งแล้ว
+    def notify(load_result: dict):
+        email_cfg = load_email_config_from_env()
+        # ให้แน่ใจว่า load_result มี updated_samples (จาก loader) หรือส่งแยกก็ได้
+        updated_samples = load_result.get("updated_samples") or []
+        send_summary_email(load_result, email_cfg, updated_samples)
+    
+    # @task()
+    # def should_send_email(result: dict) -> bool:
+    #     return (result.get("inserted", 0) + result.get("updated", 0)) > 0
+
     raw = extract_to_file()
     clean = transform_file(raw)
     rep = validate_file(clean)
-    load(clean, rep)
+    load_result = load(clean, rep)
+    
+    notify(load_result)
 
 finance_invoice_etl()

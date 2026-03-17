@@ -17,10 +17,10 @@ from src.dgsi.finance_invoice.loaders.finance_invoice_sql import (
     upload_temp_table, ensure_target_table, merge_all_in_batches, drop_temp_table
 )
 
-from src.dgsi.finance_invoice.helpers.audit import write_audit_line
+from src.helpers.audit import write_audit_line
 
 # for send email
-from src.dgsi.finance_invoice.helpers.emailer import load_email_config_from_env, send_summary_email
+from src.helpers.emailer import load_email_config_from_env, send_summary_email
 
 TZ = "Asia/Bangkok"
 
@@ -83,6 +83,7 @@ def finance_invoice_etl():
         if report.get("rows", 0) == 0:
             return {
                 "status": "no_data",
+                "subject": "DGSI : Finance Invoice",
                 "rows_total": 0,
                 "inserted": 0,
                 "updated": 0,
@@ -130,6 +131,7 @@ def finance_invoice_etl():
 
         return {
             "status": "success",
+            "subject": "DGSI : Finance Invoice",
             "inserted": int(inserted),
             "updated": int(updated),
             "duration_sec": duration_sec,

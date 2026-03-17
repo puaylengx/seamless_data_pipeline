@@ -88,12 +88,14 @@ OUTER APPLY
      WHERE am.Major = SUBSTRING(stagingStudent.programCode, 1, 4)
      ORDER BY am.Id DESC
 ) AS major
+where std.StudentStatus in ('dm','ex','g','la','np','prc','pa', 'rs','s')
+and term.AcademicYear >= '2016'
+ORDER BY academic_year, academic_term, code;
 -- where std.StudentStatus in ('dm','ex','g','la','np','prc','pa', 'rs','s')
 -- and term.AcademicYear >= '2016'
 -- and Code = '6681018'
-where std.StudentStatus in (/*__STATUSES__*/)
-  and term.AcademicYear >= %s
-order by academic_year, academic_term, code
+-- where std.StudentStatus in (/*__STATUSES__*/)
+--   and term.AcademicYear >= %s
 -- where std.StudentStatus in ({statuses})
 --   and term.AcademicYear >= {min_academic_year}
 -- order by academic_year, academic_term, code

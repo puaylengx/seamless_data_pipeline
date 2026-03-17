@@ -15,32 +15,27 @@ def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 def cast_and_clean(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
-    # ตัวอย่างการแปลง (ปรับให้ตรง schema จริงของคุณ)
+
     date_cols = [c for c in df.columns if c.endswith("_date")]
     for c in date_cols:
         df[c] = pd.to_datetime(df[c], errors="coerce")
 
-    # เติมค่า missing ที่จำเป็น
     if "grade" in df.columns:
         df["grade"] = df["grade"].fillna("N/A")
 
-    # ตัดแถวซ้ำ
     df = df.drop_duplicates()
-
     return df
 
 def transform_student_information(df: pd.DataFrame) -> pd.DataFrame:
     df = normalize_columns(df)
-    rename_map = {
-            "code": "student_id",
-    }
 
-    df = df.rename(columns=rename_map)
+    # ✅ ทำให้มี key 2 ชื่อแบบชัดเจน (ไม่ rename ทิ้ง)
+    if "student_id" not in df.columns and "code" in df.columns:
+        df["student_id"] = df["code"]
 
-    # กันเคสไม่มีคอลัมน์ที่ต้องใช้
-    for col in ["student_id"]:
-        if col not in df.columns:
-            df[col] = pd.NA
+    # กันเคสไม่มีคอลัมน์
+    if "student_id" not in df.columns:
+        df["student_id"] = pd.NA
 
     df = cast_and_clean(df)
     return df

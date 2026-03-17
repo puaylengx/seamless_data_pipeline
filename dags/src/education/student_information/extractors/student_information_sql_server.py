@@ -1,29 +1,19 @@
+# src/education/student_information/extractors/student_information_sql_server.py
 from __future__ import annotations
-from airflow.providers.microsoft.mssql.hooks.mssql import MsSqlHook
+from pathlib import Path
 import pandas as pd
+from airflow.providers.microsoft.mssql.hooks.mssql import MsSqlHook
+from src.helpers.logger import get_logger
 
-def fetch_student_information( mssql_conn_id: str, sql_path: str, statuses: list[str], min_year: int) -> pd.DataFrame:
+logger = get_logger(__name__)
+
+def load_sql(path: str | Path) -> str:
+    return Path(path).read_text(encoding="utf-8")
+
+def fetch_student_information(
+    mssql_conn_id: str,
+    sql_path: str | Path,
+) -> pd.DataFrame:
     hook = MsSqlHook(mssql_conn_id=mssql_conn_id)
-
-    with open(sql_path, "r", encoding="utf-8") as f:
-        query = f.read()
-
-    # เติม placeholder สำหรับ IN (...)
-    if not statuses:
-        # กันเคสลิสต์ว่าง: ทำให้ WHERE in (...) ล้มเหลวอย่างปลอดภัย
-        # หรือจะใช้ 'where 1=0' แทนก็ได้
-        query = query.replace("/*__STATUSES__*/", "%s")
-        params = {}
-    else:
-        placeholders = ", ".join(["%s"] * len(statuses))
-        query = query.replace("/*__STATUSES__*/", placeholders)
-        params = list(statuses)
-
-    # ต่อท้ายค่าปีขั้นต่ำที่ปรากฏใน SQL (หลัง in (...))
-    params.append(int(min_year))  # ให้ลำดับตรงกับ %s หลัง IN(...)
-
-    # Debug: ลอง log query และจำนวน params
-    # print(query); print(params)
-
-    df = hook.get_pandas_df(sql=query, parameters=params)
-    return df
+    sql = load_sql(sql_path)
+    return hook.get_pandas_df(sql=sql)

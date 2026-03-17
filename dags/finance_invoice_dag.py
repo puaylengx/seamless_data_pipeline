@@ -3,6 +3,8 @@ import pendulum
 from airflow.exceptions import AirflowFailException
 import os
 import pandas as pd
+import time
+import math
 
 from src.config import get_conn, get_job_config, PathConfig
 from src.dgsi.finance_invoice.extractors.finance_invoice_sql_server import extract_invoices
@@ -24,14 +26,19 @@ TZ = "Asia/Bangkok"
 
 @dag(
     dag_id="finance_invoice_pipeline",
-    start_date=pendulum.datetime(2026, 3, 1, tz=TZ),
-    schedule="@daily",
+    start_date=pendulum.datetime(2026, 3, 17, tz=TZ),
+    # schedule="@weekly",
+    schedule="00 15 * * 5", # นาที  ชั่วโมง  วันของเดือน  เดือน  วันของสัปดาห์
     catchup=False,
     tags=["finance", "etl"],
     default_args={"retries": 2},
 )
 
 def finance_invoice_etl():
+    
+    @task()
+    def mark_start() -> float:
+        return time.time()
 
     @task()
     def extract_to_file() -> str:
@@ -72,9 +79,19 @@ def finance_invoice_etl():
         return report
 
     @task()
-    def load(clean_path: str, report: dict) -> dict:
+    def load(clean_path: str, report: dict, start_ts: float) -> dict:
         if report.get("rows", 0) == 0:
-            return {"status": "no_data", "rows": 0}
+            return {
+                "status": "no_data",
+                "rows_total": 0,
+                "inserted": 0,
+                "updated": 0,
+                "duration_sec": round(time.time() - start_ts, 2),
+                "batches_total": 0,
+                "updated_samples": [],
+                "target_table": "-",
+                "run_date": pendulum.now(TZ).format("YYYY-MM-DD HH:mm:ss"),
+            }
 
         job = get_job_config()
         tgt = get_conn("mssql_data_op")
@@ -104,14 +121,23 @@ def finance_invoice_etl():
 
         with tgt_engine.begin() as conn:
             drop_temp_table(conn, schema, temp_table)
+            
+        # ✅ duration ใช้ start_ts จาก task runtime จริง
+        duration_sec = round(time.time() - start_ts, 2)
+
+        rows_total = int(report.get("rows", 0) or 0)
+        batches_total = int(math.ceil(rows_total / job.batch_size)) if rows_total else 0
 
         return {
             "status": "success",
-            "rows": int(report["rows"]),
             "inserted": int(inserted),
             "updated": int(updated),
-            "updated_samples": updated_samples[:10],
-            "target": f"{schema}.{job.target_table}"
+            "duration_sec": duration_sec,
+            "rows_total": rows_total,
+            "batches_total":batches_total,
+            "updated_samples": (updated_samples or [])[:10],
+            "target_table": f"{schema}.{job.target_table}",
+            "run_date": pendulum.now(TZ).format("YYYY-MM-DD HH:mm:ss"),
         }
 
 
@@ -125,11 +151,12 @@ def finance_invoice_etl():
     # @task()
     # def should_send_email(result: dict) -> bool:
     #     return (result.get("inserted", 0) + result.get("updated", 0)) > 0
-
+    
+    start_ts = mark_start()
     raw = extract_to_file()
     clean = transform_file(raw)
     rep = validate_file(clean)
-    load_result = load(clean, rep)
+    load_result = load(clean, rep, start_ts)
     
     notify(load_result)
 

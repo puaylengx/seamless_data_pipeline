@@ -39,23 +39,25 @@ def _load_from_env() -> EmailConfig:
         from_name=os.getenv("SMTP_MAIL_FROM", "Airflow Notification").strip(),
     )
 
-def _load_from_airflow_connection(conn_id: str = "smtp_default") -> EmailConfig:
-    # ทำให้ local run ไม่พัง (ถ้าไม่มี Airflow)
-    try:
-        from airflow.hooks.base import BaseHook
-    except Exception as e:
-        raise RuntimeError("Airflow is not available in this runtime") from e
 
+def _load_from_airflow_connection(conn_id: str = "smtp_default") -> EmailConfig:
+    from airflow.hooks.base import BaseHook  # Airflow runtime only
     conn = BaseHook.get_connection(conn_id)
     extra = conn.extra_dejson or {}
 
-    # alert_email fallback มาจาก extra ก่อน (ENV ไม่มี)
-    alert_email = (os.getenv("alert_email", "").strip()
-               or str(extra.get("alert_email", "")).strip())
-
-    from_name = (os.getenv("SMTP_MAIL_FROM", "").strip()
-                 or str(extra.get("from_name", "Automation Notification")).strip()
-                 or "Automation Notification")
+    # ✅ รองรับหลาย key เพื่อไม่จุกจิก
+    alert_email = (
+        os.getenv("ALERT_EMAILS", "").strip()
+        or os.getenv("MAIL_TO", "").strip()
+        or str(extra.get("alert_email", "")).strip()
+        or str(extra.get("mail_to", "")).strip()
+    )
+    from_name = (
+        os.getenv("SMTP_MAIL_FROM", "").strip()
+        or os.getenv("MAIL_FROM_NAME", "").strip()
+        or str(extra.get("from_name", "")).strip()
+        or "Airflow Notification"
+    )
 
     return EmailConfig(
         host=(conn.host or "").strip(),

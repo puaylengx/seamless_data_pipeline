@@ -196,7 +196,6 @@ def merge_batch_with_audit(conn,temp_fqn: str,target_fqn: str,batch_keys: List[s
     SELECT * FROM @audit;
     """
 
-    
     result = conn.execution_options(stream_results=True).execute(text(merge_sql), params)
 
     inserted_count, updated_count = 0, 0

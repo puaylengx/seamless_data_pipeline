@@ -229,7 +229,6 @@ def merge_batch_with_audit(conn,temp_fqn: str,target_fqn: str,batch_keys: List[s
 
     return inserted_count, updated_count, updated_payloads
 
-
 def merge_all_in_batches(
     tgt_engine,
     schema: str,
@@ -302,7 +301,6 @@ def merge_all_in_batches(
         logger.info("✅ MERGE batch %s done (INSERT=%s, UPDATE=%s)", i, ins, upd)
 
     return inserted_total, updated_total, updated_rows_samples
-
 
 def drop_temp_table(conn, schema: str, temp_table: str):
     conn.execute(text(

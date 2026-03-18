@@ -50,3 +50,19 @@ def get_job_config() -> JobConfig:
         key_col=Variable.get("FIN_INV_KEY_COL", default_var="invoiceId"),
         batch_size=int(Variable.get("FIN_INV_BATCH_SIZE", default_var="1000")),
     )
+
+@dataclass
+class JobConfigStaging:
+    target_schema: str = "dbo"
+    target_table: str = "StagingStudent_20251105"
+    key_col: str = "studentcode"
+    batch_size: int = 1000
+    
+def get_job_config_staging() -> JobConfigStaging:
+    # ตั้งค่า override ได้ผ่าน Airflow Variable
+    return JobConfigStaging(
+        target_schema=Variable.get("STAGING_STD_TARGET_SCHEMA", default_var="dbo"),
+        target_table=Variable.get("STAGING_STD_TARGET_TABLE", default_var="StagingStudent_20251105"),
+        key_col=Variable.get("STAGING_STD_KEY_COL", default_var="studentcode"),
+        batch_size=int(Variable.get("STAGING_STD_BATCH_SIZE", default_var="1000")),
+    )

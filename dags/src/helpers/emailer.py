@@ -139,128 +139,128 @@ def send_summary_email(result: dict, email_cfg: EmailConfig, updated_rows_sample
 
     # --------- HTML email ----------
     body = f"""\
-<!DOCTYPE html>
-<html lang="th">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width"/>
-<title>Finance Invoice Summary</title>
-<style>
-@media only screen and (max-width:600px) {{
-  .container {{ width: 100% !important; padding: 16px !important; }}
-  .grid-2 {{ display:block !important; }}
-  .metric {{ width: 100% !important; display:block !important; margin-bottom:10px !important; }}
-  .btn {{ display:block !important; width: 100% !important; text-align:center !important; margin-bottom:8px !important; }}
-}}
-</style>
-</head>
-<body style="margin:0; padding:0; background:#f6f7fb; font-family:Segoe UI, Arial, Helvetica, sans-serif; color:#212529;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f7fb; padding:20px 0;">
-  <tr>
-    <td align="center">
-      <table role="presentation" class="container" width="720" cellpadding="0" cellspacing="0"
-             style="background:#ffffff; width:720px; max-width:720px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.06); overflow:hidden;">
+      <!DOCTYPE html>
+      <html lang="th">
+      <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width"/>
+      <title>{_html.escape(str(result.get('subject') or 'Pipeline'))} Summary</title>
+      <style>
+      @media only screen and (max-width:600px) {{
+        .container {{ width: 100% !important; padding: 16px !important; }}
+        .grid-2 {{ display:block !important; }}
+        .metric {{ width: 100% !important; display:block !important; margin-bottom:10px !important; }}
+        .btn {{ display:block !important; width: 100% !important; text-align:center !important; margin-bottom:8px !important; }}
+      }}
+      </style>
+      </head>
+      <body style="margin:0; padding:0; background:#f6f7fb; font-family:Segoe UI, Arial, Helvetica, sans-serif; color:#212529;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f7fb; padding:20px 0;">
         <tr>
-          <td style="background:#0d6efd; padding:20px 24px; color:#ffffff;">
-            <div style="font-size:20px; font-weight:700;">Finance Invoice — รายงานสรุป</div>
-            <div style="opacity:0.9; font-size:13px; margin-top:4px;">เวลาเริ่มรัน: {_html.escape(str(result.get('run_date') or ''))}</div>
-          </td>
-        </tr>
-
-        <tr>
-          <td style="padding:16px 24px 0 24px;">
-            <span style="display:inline-block; background:{status_bg}; color:#fff; font-size:12px; font-weight:700; letter-spacing:.3px; padding:6px 10px; border-radius:999px; text-transform:uppercase;">
-              {_html.escape(status_txt or 'N/A')}
-            </span>
-            <span style="display:inline-block; margin-left:12px; color:#6c757d; font-size:12px;">
-              ตาราง: <strong style="color:#212529;">{_html.escape(str(table or 'N/A'))}</strong>
-            </span>
-          </td>
-        </tr>
-
-        <tr>
-          <td style="padding:12px 24px 0 24px;">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="grid-2" style="border-collapse:separate; border-spacing:12px 12px;">
+          <td align="center">
+            <table role="presentation" class="container" width="720" cellpadding="0" cellspacing="0"
+                  style="background:#ffffff; width:720px; max-width:720px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.06); overflow:hidden;">
               <tr>
-                <td class="metric" style="background:#f1f4ff; border:1px solid #e1e7ff; border-radius:10px; padding:14px;">
-                  <div style="font-size:12px; color:#4a60a1;">INSERT</div>
-                  <div style="font-size:22px; font-weight:800; margin-top:4px;">{inserted:,}</div>
-                </td>
-                <td class="metric" style="background:#f0fff5; border:1px solid #d7f5e1; border-radius:10px; padding:14px;">
-                  <div style="font-size:12px; color:#2f7a47;">UPDATE</div>
-                  <div style="font-size:22px; font-weight:800; margin-top:4px;">{updated:,}</div>
+                <td style="background:#0d6efd; padding:20px 24px; color:#ffffff;">
+                  <div style="font-size:20px; font-weight:700;">{_html.escape(str(result.get('subject') or 'Pipeline'))} — รายงานสรุป</div>
+                  <div style="opacity:0.9; font-size:13px; margin-top:4px;">เวลาเริ่มรัน: {_html.escape(str(result.get('run_date') or ''))}</div>
                 </td>
               </tr>
+
               <tr>
-                <td class="metric" style="background:#fff8e6; border:1px solid #ffedc2; border-radius:10px; padding:14px;">
-                  <div style="font-size:12px; color:#a36316;">รวมแถว (batches)</div>
-                  <div style="font-size:18px; font-weight:700; margin-top:4px;">{rows:,}
-                    <span style="font-size:12px; color:#6c757d;">({batches} ชุด)</span>
-                  </div>
+                <td style="padding:16px 24px 0 24px;">
+                  <span style="display:inline-block; background:{status_bg}; color:#fff; font-size:12px; font-weight:700; letter-spacing:.3px; padding:6px 10px; border-radius:999px; text-transform:uppercase;">
+                    {_html.escape(status_txt or 'N/A')}
+                  </span>
+                  <span style="display:inline-block; margin-left:12px; color:#6c757d; font-size:12px;">
+                    ตาราง: <strong style="color:#212529;">{_html.escape(str(table or 'N/A'))}</strong>
+                  </span>
                 </td>
-                <td class="metric" style="background:#eef5f9; border:1px solid #d7e7f0; border-radius:10px; padding:14px;">
-                  <div style="font-size:12px; color:#2f5266;">ระยะเวลา</div>
-                  <div style="font-size:18px; font-weight:700; margin-top:4px;">{duration} วินาที</div>
+              </tr>
+
+              <tr>
+                <td style="padding:12px 24px 0 24px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="grid-2" style="border-collapse:separate; border-spacing:12px 12px;">
+                    <tr>
+                      <td class="metric" style="background:#f1f4ff; border:1px solid #e1e7ff; border-radius:10px; padding:14px;">
+                        <div style="font-size:12px; color:#4a60a1;">INSERT</div>
+                        <div style="font-size:22px; font-weight:800; margin-top:4px;">{inserted:,}</div>
+                      </td>
+                      <td class="metric" style="background:#f0fff5; border:1px solid #d7f5e1; border-radius:10px; padding:14px;">
+                        <div style="font-size:12px; color:#2f7a47;">UPDATE</div>
+                        <div style="font-size:22px; font-weight:800; margin-top:4px;">{updated:,}</div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="metric" style="background:#fff8e6; border:1px solid #ffedc2; border-radius:10px; padding:14px;">
+                        <div style="font-size:12px; color:#a36316;">รวมแถว (batches)</div>
+                        <div style="font-size:18px; font-weight:700; margin-top:4px;">{rows:,}
+                          <span style="font-size:12px; color:#6c757d;">({batches} ชุด)</span>
+                        </div>
+                      </td>
+                      <td class="metric" style="background:#eef5f9; border:1px solid #d7e7f0; border-radius:10px; padding:14px;">
+                        <div style="font-size:12px; color:#2f5266;">ระยะเวลา</div>
+                        <div style="font-size:18px; font-weight:700; margin-top:4px;">{duration} วินาที</div>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <tr>
+                <td style="padding:4px 24px 0 24px;">
+                  <table role="presentation" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td>
+                        <a class="btn" href="{_html.escape(str(log_link or ''))}" style="display:inline-block; background:#0d6efd; color:#fff; text-decoration:none; padding:10px 14px; border-radius:8px; font-weight:600; font-size:13px; border:1px solid #0d6efd;">📄 เปิด Log</a>
+                      </td>
+                      <td width="8"></td>
+                      <td>
+                        <a class="btn" href="{_html.escape(str(audit_link or ''))}" style="display:inline-block; background:#6c757d; color:#fff; text-decoration:none; padding:10px 14px; border-radius:8px; font-weight:600; font-size:13px; border:1px solid #6c757d;">🧾 เปิด Audit</a>
+                      </td>
+                    </tr>
+                  </table>
+                  <div style="color:#6c757d; font-size:12px; margin-top:8px;">* หากลิงก์ไม่เปิด (เช่น path ภายในเครื่องเซิร์ฟเวอร์) โปรดเข้าไปที่เครื่องที่รันจ็อบแล้วเปิดไฟล์ตาม path</div>
+                </td>
+              </tr>
+
+              <tr><td style="padding:16px 24px 0 24px;"><hr style="border:none; border-top:1px solid #e9ecef; margin:0;"></td></tr>
+
+              {("" if not rows_html else f"""
+              <tr>
+                <td style="padding:16px 24px 8px 24px;">
+                  <div style="font-weight:700; margin-bottom:8px; color:#212529;">📝 ตัวอย่างรายการ UPDATE (สูงสุด 10 รายการ)</div>
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; border:1px solid #e9ecef; border-radius:8px; overflow:hidden;">
+                    <thead>
+                      <tr style="background:#f8f9fa;">
+                        <th align="left" style="padding:10px 12px; font-size:12px; color:#495057; border-bottom:1px solid #e9ecef; white-space:nowrap;">Invoice</th>
+                        <th align="left" style="padding:10px 12px; font-size:12px; color:#495057; border-bottom:1px solid #e9ecef;">Field</th>
+                        <th align="left" style="padding:10px 12px; font-size:12px; color:#495057; border-bottom:1px solid #e9ecef;">Old</th>
+                        <th align="left" style="padding:10px 12px; font-size:12px; color:#495057; border-bottom:1px solid #e9ecef;">New</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows_html}
+                    </tbody>
+                  </table>
+                  <div style="color:#6c757d; font-size:12px; margin-top:6px;">* ดูรายละเอียดทั้งหมดในไฟล์ Audit</div>
+                </td>
+              </tr>
+              """)}
+
+              <tr>
+                <td style="padding:18px 24px 22px 24px; color:#6c757d; font-size:12px;">
+                  รันโดยระบบอัตโนมัติ — {_html.escape(str(result.get('subject') or 'Pipeline'))} Job<br>
+                  เวลาเสร็จสิ้น: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                 </td>
               </tr>
             </table>
-          </td>
-        </tr>
-
-        <tr>
-          <td style="padding:4px 24px 0 24px;">
-            <table role="presentation" cellpadding="0" cellspacing="0">
-              <tr>
-                <td>
-                  <a class="btn" href="{_html.escape(str(log_link or ''))}" style="display:inline-block; background:#0d6efd; color:#fff; text-decoration:none; padding:10px 14px; border-radius:8px; font-weight:600; font-size:13px; border:1px solid #0d6efd;">📄 เปิด Log</a>
-                </td>
-                <td width="8"></td>
-                <td>
-                  <a class="btn" href="{_html.escape(str(audit_link or ''))}" style="display:inline-block; background:#6c757d; color:#fff; text-decoration:none; padding:10px 14px; border-radius:8px; font-weight:600; font-size:13px; border:1px solid #6c757d;">🧾 เปิด Audit</a>
-                </td>
-              </tr>
-            </table>
-            <div style="color:#6c757d; font-size:12px; margin-top:8px;">* หากลิงก์ไม่เปิด (เช่น path ภายในเครื่องเซิร์ฟเวอร์) โปรดเข้าไปที่เครื่องที่รันจ็อบแล้วเปิดไฟล์ตาม path</div>
-          </td>
-        </tr>
-
-        <tr><td style="padding:16px 24px 0 24px;"><hr style="border:none; border-top:1px solid #e9ecef; margin:0;"></td></tr>
-
-        {("" if not rows_html else f"""
-        <tr>
-          <td style="padding:16px 24px 8px 24px;">
-            <div style="font-weight:700; margin-bottom:8px; color:#212529;">📝 ตัวอย่างรายการ UPDATE (สูงสุด 10 รายการ)</div>
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; border:1px solid #e9ecef; border-radius:8px; overflow:hidden;">
-              <thead>
-                <tr style="background:#f8f9fa;">
-                  <th align="left" style="padding:10px 12px; font-size:12px; color:#495057; border-bottom:1px solid #e9ecef; white-space:nowrap;">Invoice</th>
-                  <th align="left" style="padding:10px 12px; font-size:12px; color:#495057; border-bottom:1px solid #e9ecef;">Field</th>
-                  <th align="left" style="padding:10px 12px; font-size:12px; color:#495057; border-bottom:1px solid #e9ecef;">Old</th>
-                  <th align="left" style="padding:10px 12px; font-size:12px; color:#495057; border-bottom:1px solid #e9ecef;">New</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows_html}
-              </tbody>
-            </table>
-            <div style="color:#6c757d; font-size:12px; margin-top:6px;">* ดูรายละเอียดทั้งหมดในไฟล์ Audit</div>
-          </td>
-        </tr>
-        """)}
-
-        <tr>
-          <td style="padding:18px 24px 22px 24px; color:#6c757d; font-size:12px;">
-            รันโดยระบบอัตโนมัติ — Finance Invoice Job<br>
-            เวลาเสร็จสิ้น: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
           </td>
         </tr>
       </table>
-    </td>
-  </tr>
-</table>
-</body>
-</html>
-"""
+      </body>
+      </html>
+    """
 
     # --------- Compose & Send with retry ----------
     msg = MIMEMultipart("alternative")

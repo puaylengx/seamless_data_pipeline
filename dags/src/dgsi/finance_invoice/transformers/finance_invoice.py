@@ -1,6 +1,5 @@
 import re
 import pandas as pd
-from datetime import datetime
 
 TARGET_COLS_ORDER = [
     "invoiceId", "acaYear", "semester", "invoiceNo", "regisType",

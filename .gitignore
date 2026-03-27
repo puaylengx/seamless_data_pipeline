@@ -1,3 +1,6 @@
+.DS_Store
+.idea/
+
 .venv
 
 .env
@@ -6,4 +9,5 @@ __pycache__
 
 config/*
 logs/*
-/dags/data/student_information
+/dags/data/*
+code/data

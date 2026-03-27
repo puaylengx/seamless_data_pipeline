@@ -35,11 +35,12 @@ TZ = "Asia/Bangkok"
 # ======================================================================
 @dag(
     dag_id="staging_student_pipeline",
-    start_date=pendulum.datetime(2026, 3, 1, tz=TZ),
-    schedule="@daily",
+    start_date=pendulum.datetime(2026, 3, 17, tz=TZ),
+    # schedule="@weekly",
+    schedule="00 15 * * 5", # นาที  ชั่วโมง  วันของเดือน  เดือน  วันของสัปดาห์
     catchup=False,
     default_args={"retries": 2},
-    tags=["dgsi", "staging", "student", "finance-style"],
+    tags=["dgsi", "staging", "student", "staging-style"],
 )
 def staging_student_etl():
 
@@ -241,7 +242,6 @@ def staging_student_etl():
     clean = transform_file(raw)
     result = load(clean["path"],clean, start_ts)
     notify(result)
-
 
 # DAG object
 staging_student_dag = staging_student_etl()

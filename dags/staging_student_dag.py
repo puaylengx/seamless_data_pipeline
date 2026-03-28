@@ -232,7 +232,9 @@ def staging_student_etl():
     @task(retries=0)
     def notify(load_result: dict):
         email_cfg = load_email_config_from_env()
-        send_summary_email(load_result, email_cfg, [])
+        #  ให้แน่ใจว่า load_result มี updated_samples (จาก loader) หรือส่งแยกก็ได้
+        updated_samples = load_result.get("updated_samples") or []
+        send_summary_email(load_result, email_cfg, updated_samples)
 
     # -------------------------------
     # DAG wiring

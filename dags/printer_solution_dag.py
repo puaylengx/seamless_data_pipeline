@@ -20,7 +20,7 @@ from src.config import (
 from src.information_tech.printer_solution.extractors.priner_solution_postgresql import fetch_printer_solution_postgresql
 from src.information_tech.printer_solution.transformers.printer_solution import transform_printer_solution
 from src.information_tech.printer_solution.validators.printer_solution import validate_printer_solution
-from src.information_tech.printer_solution.loaders.printer_solution_bigquery import load_printer_usage_monthly_upsert
+from src.information_tech.printer_solution.loaders.printer_solution_bigquery import load_printer_usage_monthly_insert_only
 
 # helper กลาง
 from src.helpers.audit import write_audit_line
@@ -149,13 +149,13 @@ def printer_solution_etl():
         if "code" not in df.columns and "user_name" in df.columns:
             df["code"] = df["user_name"]
 
-        stats = load_printer_usage_monthly_upsert(
+        stats = load_printer_usage_monthly_insert_only(
             df=df,
             project_id=GCP_PROJECT,
             dataset=PRINTER_BQ_DATASET,
             target_table=PRINTER_BQ_TABLE,
             gcp_conn_id=GCP_CONN_ID,
-            key_cols=["user_name"],  # หรือ key ของคุณจริง ๆ
+            # key_cols=["user_name"],  # หรือ key ของคุณจริง ๆ
             location="US",
         )
 

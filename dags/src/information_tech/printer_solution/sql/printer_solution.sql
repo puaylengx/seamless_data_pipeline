@@ -14,7 +14,7 @@ WITH usage_data AS (
   WHERE u.deleted   = 'N'
     AND pl.printed   = 'Y'
     AND pl.cancelled = 'N'
---     AND pl.usage_day::date > DATE '2023-09-30'
+    AND pl.usage_day::date > DATE '2023-09-30'
 --     AND pl.usage_day::date <> CURRENT_DATE
 )
 SELECT

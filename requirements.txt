@@ -7,3 +7,4 @@ pyarrow
 pymssql
 # ถ้า MsSqlHook ใช้ pymssql ในสภาพแวดล้อมของคุณ
 google-cloud-bigquery
+sqlalchemy

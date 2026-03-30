@@ -22,6 +22,15 @@ DATA_DIR         = Path(
     Variable.get("STUDENT_INFO_DATA_DIR", default_var="/opt/airflow/dags/data/student_information")
 )
 
+# for printer
+PRINTER_BQ_DATASET       = Variable.get("PRINTER_BQ_DATASET", default_var="PaperCut")
+PRINTER_BQ_TABLE         = Variable.get("PRINTER_BQ_TABLE",   default_var="monthly_printer_usage")
+PRINTER_POSTGRESQL_CONN_ID    = Variable.get("PRINTER_POSTGRESQL_CONN_ID", default_var="mssql_student_info")
+PRINTER_SQL_PATH         = Variable.get(
+    "PRINTER_SQL_PATH",
+    default_var="/opt/airflow/dags/src/information_tech/printer_information/sql/printer_solution.sql"
+)
+
 # สร้างโฟลเดอร์ปลายทางการทำงาน (extract/transform) หากยังไม่มี
 (DATA_DIR / "extract").mkdir(parents=True, exist_ok=True)
 (DATA_DIR / "transform").mkdir(parents=True, exist_ok=True)
@@ -66,3 +75,5 @@ def get_job_config_staging() -> JobConfigStaging:
         key_col=Variable.get("STAGING_STD_KEY_COL", default_var="studentcode"),
         batch_size=int(Variable.get("STAGING_STD_BATCH_SIZE", default_var="1000")),
     )
+
+

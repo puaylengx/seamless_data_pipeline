@@ -1,9 +1,7 @@
-# loaders/printer_solution_bigquery.py
-
 from __future__ import annotations
 
 import logging
-from typing import Dict
+from typing import Dict, List, Optional, Union
 
 import pandas as pd
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
@@ -62,8 +60,32 @@ def _ensure_table_exists(
     )
     job.result()
 
+def _merge_join_condition(keys: List[str], t_alias: str = "T", s_alias: str = "S") -> str:
+    """
+    สร้างเงื่อนไข join ที่เทียบ NULL = NULL ได้:
+      (T.k = S.k OR (T.k IS NULL AND S.k IS NULL)) AND ...
+    """
+    parts = []
+    for k in keys:
+        qc = _quote_col(k)
+        parts.append(f"(({t_alias}.{qc} = {s_alias}.{qc}) OR ({t_alias}.{qc} IS NULL AND {s_alias}.{qc} IS NULL))")
+    return " AND ".join(parts)
+
+def _staging_dedup_select(staging_fqn: str, cols: List[str], keys: List[str]) -> str:
+    """
+    กัน duplicate ภายใน staging เอง (ถ้ามี) โดยเลือก 1 แถวต่อ key
+    (ไม่มี timestamp ให้ order ก็ใช้ ORDER BY 1 เฉย ๆ เพื่อให้ SQL ถูกต้อง)
+    """
+    cols_sql = ", ".join([f"S.{_quote_col(c)}" for c in cols])
+    part_sql = ", ".join([_quote_col(k) for k in keys])
+    return f"""
+        SELECT {cols_sql}
+        FROM {staging_fqn} AS S
+        QUALIFY ROW_NUMBER() OVER (PARTITION BY {part_sql} ORDER BY 1) = 1
+    """
+
 # -------------------------
-# Public API: INSERT‑ONLY loader
+# Public API: INSERT‑ONLY incremental loader
 # -------------------------
 def load_printer_usage_monthly_insert_only(
     df: pd.DataFrame,
@@ -74,10 +96,16 @@ def load_printer_usage_monthly_insert_only(
     gcp_conn_id: str,
     location: str = "asia-southeast1",
     staging_suffix: str = "_stg",
-) -> Dict[str, int]:
+    unique_key_cols: Optional[List[str]] = None,
+) -> Dict[str, Union[int, str]]:
     """
-    ✅ INSERT‑ONLY (append) เข้า BigQuery
-    ❌ ไม่ update / ไม่ merge ของเดิม
+    ✅ INSERT‑ONLY เข้า BigQuery แต่ insert เฉพาะ "ของใหม่"
+    ❌ ไม่ update / ไม่ merge ของเดิม (เฉพาะ WHEN NOT MATCHED)
+
+    unique_key_cols:
+      - ระบุคอลัมน์ที่ใช้เป็น "ความเป็นเอกลักษณ์" ของแถว
+      - ถ้าไม่ส่งมา จะ fallback เป็น df.columns (คือกันซ้ำแบบทั้งแถวเหมือนกัน 100%)
+        *แนะนำให้ระบุ key จริง ๆ เพื่อให้เร็วและชัวร์*
 
     Returns:
       {"inserted": int, "job_id": str}
@@ -86,18 +114,22 @@ def load_printer_usage_monthly_insert_only(
         logger.info("No data to load (empty dataframe).")
         return {"inserted": 0, "job_id": ""}
 
+    # เลือก key: ถ้าไม่ระบุ -> ใช้ทุกคอลัมน์ (กันซ้ำแบบ exact row)
+    keys = unique_key_cols or list(df.columns)
+
+    # sanity: key ต้องอยู่ใน df
+    missing_keys = [k for k in keys if k not in df.columns]
+    if missing_keys:
+        raise ValueError(f"unique_key_cols not found in dataframe: {missing_keys}")
+
     logger.info(
-        "INSERT‑ONLY load target table: %s.%s.%s",
-        project_id, dataset, target_table
+        "Incremental INSERT‑ONLY load target table: %s.%s.%s (keys=%s)",
+        project_id, dataset, target_table, keys
     )
 
     hook = BigQueryHook(gcp_conn_id=gcp_conn_id, location=location)
-    client: bigquery.Client = hook.get_client(
-        project_id=project_id,
-        location=location,
-    )
+    client: bigquery.Client = hook.get_client(project_id=project_id, location=location)
 
-    # ensure dataset + target
     _ensure_dataset_exists(client, project_id, dataset, location)
 
     staging_table = f"{target_table}{staging_suffix}"
@@ -120,25 +152,33 @@ def load_printer_usage_monthly_insert_only(
     load_job.result()
     job_id = getattr(load_job, "job_id", "")
 
-    # 2) INSERT INTO target SELECT * FROM staging
-    cols = ", ".join([_quote_col(c) for c in df.columns])
+    # 2) MERGE: insert only when not matched (by keys)
+    cols = list(df.columns)
+    cols_sql = ", ".join([_quote_col(c) for c in cols])
+    values_sql = ", ".join([f"S.{_quote_col(c)}" for c in cols])
 
-    insert_sql = f"""
-        INSERT INTO {target_fqn} ({cols})
-        SELECT {cols}
-        FROM {staging_fqn}
+    join_sql = _merge_join_condition(keys, t_alias="T", s_alias="S")
+    source_sql = _staging_dedup_select(staging_fqn, cols, keys)
+
+    merge_sql = f"""
+        MERGE {target_fqn} AS T
+        USING ({source_sql}) AS S
+        ON {join_sql}
+        WHEN NOT MATCHED THEN
+          INSERT ({cols_sql}) VALUES ({values_sql})
     """
 
-    client.query(insert_sql, location=location).result()
+    merge_job = client.query(merge_sql, location=location)
+    merge_job.result()
 
-    inserted_count = len(df)
+    inserted = int(getattr(merge_job, "num_dml_affected_rows", 0) or 0)
 
     logger.info(
-        "BQ insert‑only done: inserted=%s target=%s job_id=%s",
-        inserted_count, target_fqn, job_id
+        "BQ incremental insert‑only done: inserted=%s target=%s load_job_id=%s",
+        inserted, target_fqn, job_id
     )
 
     return {
-        "inserted": inserted_count,
+        "inserted": inserted,
         "job_id": job_id,
     }

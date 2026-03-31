@@ -155,6 +155,17 @@ def printer_solution_etl():
             dataset=PRINTER_BQ_DATASET,
             target_table=PRINTER_BQ_TABLE,
             gcp_conn_id=GCP_CONN_ID,
+            unique_key_cols=[
+                "user_name",
+                "full_name",
+                "department",
+                "office",
+                "job_type",
+                "usage_calendar_year",
+                "usage_calendar_month",
+                "usage_budget_year",
+                "usage_budget_month_order",
+            ],
             # key_cols=["user_name"],  # หรือ key ของคุณจริง ๆ
             location="US",
         )

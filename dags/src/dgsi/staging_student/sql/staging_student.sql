@@ -14,14 +14,12 @@ SELECT DISTINCT
     END AS prefix,
     CASE WHEN std.FirstNameTh IS NULL OR TRIM(std.FirstNameTh) = '' THEN UPPER(TRIM(std.FirstNameEn))
             ELSE UPPER(TRIM(std.FirstNameTh)) END AS firstNameTh,
-    CASE WHEN std.MidNameTh IS NULL OR TRIM(std.MidNameTh) = ''
-        THEN NULLIF(UPPER(TRIM(std.MidNameEn)), '')
-      ELSE UPPER(TRIM(std.MidNameTh))
-    END AS middleNameTh,
+    CASE WHEN std.MidNameTh   IS NULL OR TRIM(std.MidNameTh)   = '' THEN UPPER(TRIM(std.MidNameEn))
+            ELSE UPPER(TRIM(std.MidNameTh))   END AS middleNameTh,
     CASE WHEN std.LastNameTh  IS NULL OR TRIM(std.LastNameTh)  = '' THEN UPPER(TRIM(std.LastNameEn))
             ELSE UPPER(TRIM(std.LastNameTh))  END AS lastNameTh,
     UPPER(TRIM(std.FirstNameEn)) AS firstNameEn,
-    NULLIF(UPPER(TRIM(std.MidNameEn)), '') AS middleNameEn,
+    UPPER(TRIM(std.MidNameEn))   AS middleNameEn,
     UPPER(TRIM(std.LastNameEn))  AS lastNameEn,
     CASE WHEN std.Gender = 1 THEN 'male'
             WHEN std.Gender = 2 OR std.Code IN ('5380028') THEN 'female'
@@ -98,6 +96,6 @@ LEFT JOIN student.AdmissionInformations  admissionInfo ON admissionInfo.StudentI
 LEFT JOIN dbo.Terms term ON term.Id = admissionInfo.AdmissionTermId
 WHERE std.Code >= '50%' 
 AND std.Code  < '90%'
-AND curriInfo.IsActive = '1'
 -- AND std.Code = '6881692'
+AND curriInfo.IsActive = '1'
 ORDER BY std.Code;

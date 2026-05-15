@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import List, Tuple, Callable, Optional
+from typing import List, Tuple, Callable, Optional, Dict
 
 import pandas as pd
 from sqlalchemy import text
@@ -44,17 +44,21 @@ def get_table_columns(engine, schema: str, table: str) -> list[str]:
 # temp upload
 # -------------------------
 def upload_temp_table(
-    df: pd.DataFrame, tgt_engine, schema: str, temp_table: str, key_col: str
+    df: pd.DataFrame,
+    tgt_engine,
+    schema: str,
+    temp_table: str,
+    key_col: str,
 ):
     """
     อัปโหลด df ไป temp table (replace)
+    - ทุกคอลัมน์ NVARCHAR(MAX)
+    - key เป็น NVARCHAR(255)
     """
-    # dtype_map: ทำแบบยืดหยุ่นสำหรับ staging_student (คอลัมน์เยอะ)
     dtype_map = {c: MSSQL_NVARCHAR(None) for c in df.columns}  # NVARCHAR(MAX)
     if key_col in dtype_map:
         dtype_map[key_col] = MSSQL_NVARCHAR(255)
 
-    # optional: ถ้ามี _row_order ให้แคบลง
     if "_row_order" in dtype_map:
         dtype_map["_row_order"] = MSSQL_NVARCHAR(50)
 
@@ -73,7 +77,11 @@ def upload_temp_table(
 # ensure target table (simple + robust)
 # -------------------------
 def ensure_target_table(
-    conn, schema: str, table: str, df_columns: List[str], key_col: str
+    conn,
+    schema: str,
+    table: str,
+    df_columns: List[str],
+    key_col: str,
 ):
     """
     สร้างตารางเป้าหมายถ้ายังไม่มี
@@ -84,15 +92,14 @@ def ensure_target_table(
 
     exists = conn.execute(
         text("""
-        SELECT 1 FROM INFORMATION_SCHEMA.TABLES
-        WHERE TABLE_SCHEMA=:s AND TABLE_NAME=:t
-    """),
+            SELECT 1 FROM INFORMATION_SCHEMA.TABLES
+            WHERE TABLE_SCHEMA=:s AND TABLE_NAME=:t
+            """),
         {"s": schema, "t": table},
     ).scalar()
 
     if not exists:
-        cols = []
-        cols.append(f"[{key_col}] NVARCHAR(255) NOT NULL")
+        cols = [f"[{key_col}] NVARCHAR(255) NOT NULL"]
         for c in df_columns:
             if c == key_col:
                 continue
@@ -100,11 +107,11 @@ def ensure_target_table(
 
         cols_sql = ",\n                ".join(cols)
         conn.execute(text(f"""
-            CREATE TABLE {target_fqn} (
-                {cols_sql},
-                CONSTRAINT PK_{table}_{key_col} PRIMARY KEY CLUSTERED ([{key_col}] ASC)
-            );
-        """))
+                CREATE TABLE {target_fqn} (
+                    {cols_sql},
+                    CONSTRAINT PK_{table}_{key_col} PRIMARY KEY CLUSTERED ([{key_col}] ASC)
+                );
+                """))
         logger.info("🧱 Created target table %s", target_fqn)
         return
 
@@ -112,10 +119,10 @@ def ensure_target_table(
     row = (
         conn.execute(
             text("""
-        SELECT DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, IS_NULLABLE
-        FROM INFORMATION_SCHEMA.COLUMNS
-        WHERE TABLE_SCHEMA=:s AND TABLE_NAME=:t AND COLUMN_NAME=:c
-    """),
+                SELECT DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, IS_NULLABLE
+                FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA=:s AND TABLE_NAME=:t AND COLUMN_NAME=:c
+                """),
             {"s": schema, "t": table, "c": key_col},
         )
         .mappings()
@@ -126,12 +133,16 @@ def ensure_target_table(
         dt = (row["DATA_TYPE"] or "").upper()
         maxlen = row["CHARACTER_MAXIMUM_LENGTH"]
         nullable = (row["IS_NULLABLE"] or "").upper() == "YES"
+
         if dt != "NVARCHAR" or maxlen in (None, -1) or nullable:
             logger.info("🔧 Altering key col %s -> NVARCHAR(255) NOT NULL", key_col)
+
+            # ลบ key ที่ null/ว่างก่อน
             conn.execute(text(f"""
-                DELETE FROM {target_fqn}
-                WHERE [{key_col}] IS NULL OR LTRIM(RTRIM([{key_col}]))='';
-            """))
+                    DELETE FROM {target_fqn}
+                    WHERE [{key_col}] IS NULL OR LTRIM(RTRIM([{key_col}]))='';
+                    """))
+
             conn.execute(
                 text(
                     f"ALTER TABLE {target_fqn} ALTER COLUMN [{key_col}] NVARCHAR(255) NOT NULL;"
@@ -145,13 +156,8 @@ def ensure_target_table(
 
 
 # -------------------------
-# merge one batch + audit diff (เหมือน finance invoice)
+# merge one batch + audit diff (FIXED)
 # -------------------------
-from typing import List, Tuple, Optional
-from datetime import datetime
-from sqlalchemy import text
-
-
 def merge_batch_with_audit(
     conn,
     temp_fqn: str,
@@ -159,58 +165,81 @@ def merge_batch_with_audit(
     key_col_temp: str,
     key_col_target: str,
     batch_keys: List[str],
-    compare_pairs: List[Tuple[str, str]],  # (temp_col, target_col)
+    compare_pairs: List[Tuple[str, str]],  # (src/temp, tgt/target)
     audit_writer: AuditWriter = None,
 ) -> Tuple[int, int, List[dict]]:
     """
-    ✅ FIX:
-    - รองรับชื่อคอลัมน์ temp/target ที่ case ไม่ตรงกัน ด้วย compare_pairs
-    - กัน NULL overwrite: update เฉพาะเมื่อ S.col IS NOT NULL และใช้ COALESCE(S, T)
-    - diff compare แบบ type-safe ด้วย CONVERT(NVARCHAR(MAX), ...)
+    MERGE ต่อ batch + audit เฉพาะ update ที่ "ต่างจริง"
+    FIX:
+    - normalize compare (trim/lower/replace NBSP+tab)
+    - กัน NULL/ว่าง ไม่ให้ overwrite
+    - นับ UPDATE เฉพาะที่มี changes จริง
     """
+
     if not batch_keys:
         return 0, 0, []
 
     in_clause, params = build_in_params(batch_keys)
 
-    # helper: type-safe compare string
-    def _to_text(alias: str, col: str) -> str:
-        return f"COALESCE(CONVERT(NVARCHAR(MAX), {alias}.[{col}]), '')"
+    # normalize expression ใน SQL (กัน whitespace แปลกๆ)
+    def _norm(alias: str, col: str) -> str:
+        # NBSP (CHAR(160)) -> space, TAB -> space, trim, empty->''
+        return f"""
+        LOWER(
+          COALESCE(
+            NULLIF(
+              LTRIM(RTRIM(
+                REPLACE(REPLACE(CONVERT(NVARCHAR(MAX), {alias}.[{col}]), CHAR(160), ' '), CHAR(9), ' ')
+              )),
+            ''),
+          '')
+        )
+        """
 
-    # --- diff_conditions: update เฉพาะกรณี source มีค่า และต่างจาก target ---
-    # (กัน NULL จาก S ไปทับค่าเดิมใน T)
+    # clean value สำหรับเขียนลง target (trim + replace NBSP/tab, empty->NULL)
+    def _clean_value(alias: str, col: str) -> str:
+        return f"""
+        NULLIF(
+          LTRIM(RTRIM(
+            REPLACE(REPLACE(CONVERT(NVARCHAR(MAX), {alias}.[{col}]), CHAR(160), ' '), CHAR(9), ' ')
+          )),
+        '')
+        """
+
+    # diff: update เฉพาะเมื่อ source "มีค่า" และ normalized ต่างกันจริง
     diff_conditions = (
         " OR ".join(
             [
-                f"(S.[{src}] IS NOT NULL AND {_to_text('T', tgt)} <> {_to_text('S', src)})"
+                f"({_norm('S', src)} <> {_norm('T', tgt)} AND {_norm('S', src)} <> '')"
                 for (src, tgt) in compare_pairs
             ]
         )
         or "1 = 0"
-    )  # ถ้าไม่มี compare_pairs จะไม่ update
+    )
 
-    # --- update_clause: กัน NULL overwrite ด้วย COALESCE ---
+    # update: ไม่ให้ NULL/empty overwrite + เขียนค่า clean แล้ว
     update_clause = (
-        ",\n        ".join(
-            [
-                f"T.[{tgt}] = COALESCE(S.[{src}], T.[{tgt}])"
-                for (src, tgt) in compare_pairs
-            ]
-        )
+        ",\n        ".join([f"""
+                T.[{tgt}] = CASE
+                  WHEN {_clean_value('S', src)} IS NULL THEN T.[{tgt}]
+                  WHEN {_norm('S', src)} <> {_norm('T', tgt)} THEN {_clean_value('S', src)}
+                  ELSE T.[{tgt}]
+                END
+                """.strip() for (src, tgt) in compare_pairs])
         or f"T.[{key_col_target}] = T.[{key_col_target}]"
-    )  # กัน syntax error
+    )
 
-    # --- insert columns / values: insert ลง target col แต่ดึงค่าจาก temp col ---
+    # insert: ใส่ค่า clean แล้ว (กันรันแล้ว diff ซ้ำ)
     insert_cols = ", ".join(
         [f"[{key_col_target}]"] + [f"[{tgt}]" for (_, tgt) in compare_pairs]
     )
     insert_vals = ", ".join(
-        [f"S.[{key_col_temp}]"] + [f"S.[{src}]" for (src, _) in compare_pairs]
+        [f"S.[{key_col_temp}]"]
+        + [f"{_clean_value('S', src)}" for (src, _) in compare_pairs]
     )
 
-    # --- OUTPUT: เก็บ old/new ของ target columns ---
     output_cols = (
-        ",\n        ".join(
+        ",\n      ".join(
             [
                 f"deleted.[{tgt}] AS old_{tgt}, inserted.[{tgt}] AS new_{tgt}"
                 for (_, tgt) in compare_pairs
@@ -235,12 +264,14 @@ def merge_batch_with_audit(
       {("," + audit_table_cols) if audit_table_cols else ""}
     );
 
-    MERGE {target_fqn} AS T
+    MERGE {target_fqn} WITH (HOLDLOCK) AS T
     USING (
-      SELECT * FROM {temp_fqn} WITH (NOLOCK)
+      SELECT *
+      FROM {temp_fqn} WITH (NOLOCK)
       WHERE [{key_col_temp}] IN ({in_clause})
     ) AS S
-    ON T.[{key_col_target}] = S.[{key_col_temp}]
+    ON LTRIM(RTRIM(CONVERT(NVARCHAR(255), T.[{key_col_target}])))
+       = LTRIM(RTRIM(CONVERT(NVARCHAR(255), S.[{key_col_temp}])))
 
     WHEN MATCHED AND ({diff_conditions}) THEN
       UPDATE SET
@@ -266,25 +297,32 @@ def merge_batch_with_audit(
     inserted_count, updated_count = 0, 0
     updated_samples: List[dict] = []
 
+    # normalize ใน Python ให้ตรงกับ SQL
+    def _py_norm(v):
+        if v is None:
+            return ""
+        return str(v).replace("\u00a0", " ").replace("\t", " ").strip().lower()
+
     for row in result.mappings():
         action = (row.get("action") or "").upper()
+
         if action == "INSERT":
             inserted_count += 1
-        elif action == "UPDATE":
-            updated_count += 1
 
+        elif action == "UPDATE":
+            # นับ update เฉพาะที่ต่างจริงหลัง normalize
             changes = {}
             for _, tgt in compare_pairs:
                 old_v = row.get(f"old_{tgt}")
                 new_v = row.get(f"new_{tgt}")
-                if str(old_v or "").strip() != str(new_v or "").strip():
+                if _py_norm(old_v) != _py_norm(new_v):
                     changes[tgt] = {"old": old_v, "new": new_v}
 
             if changes:
+                updated_count += 1
                 payload = {
                     "ts": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
                     "action": "UPDATE",
-                    # เก็บ key จาก target key col (ชื่อจริงใน target)
                     "studentCode": row.get(key_col_target),
                     "changes": changes,
                 }
@@ -296,13 +334,8 @@ def merge_batch_with_audit(
 
 
 # -------------------------
-# merge all batches
+# merge all batches (FIXED mapping + ignore cols)
 # -------------------------
-from typing import List, Tuple, Optional, Dict
-from datetime import datetime
-from sqlalchemy import text
-
-
 def merge_all_in_batches(
     tgt_engine,
     schema: str,
@@ -312,17 +345,23 @@ def merge_all_in_batches(
     audit_writer: AuditWriter = None,
     temp_table: Optional[str] = None,
     max_update_samples: int = 50,
+    ignore_cols: Optional[
+        List[str]
+    ] = None,  # ตัดคอลัมน์ที่เปลี่ยนทุกครั้ง เช่น updated_at, load_ts
 ) -> Tuple[int, int, List[dict]]:
     """
     - อ่าน keys จาก temp table
     - MERGE ต่อ batch
     - คืน inserted_total, updated_total, updated_samples
 
-    ✅ FIX:
-    - ทำ column mapping แบบ case-insensitive (temp vs target)
-    - ส่ง compare_pairs (temp_col, target_col) ให้ merge_batch_with_audit
-    - รองรับ key_col ที่ชื่อไม่ตรง case กัน (temp_key vs target_key)
+    FIX:
+    - column mapping แบบ case-insensitive (temp vs target)
+    - key col case-insensitive
+    - ignore_cols เพื่อไม่ให้ update ซ้ำจากคอลัมน์ที่เปลี่ยนทุกรอบ
     """
+
+    ignore_cols_set = set([c.lower() for c in (ignore_cols or [])])
+
     temp_table = temp_table or f"{target_table}_tmp"
     temp_fqn = f"[{schema}].[{temp_table}]"
     target_fqn = f"[{schema}].[{target_table}]"
@@ -331,36 +370,48 @@ def merge_all_in_batches(
     temp_cols = get_table_columns(tgt_engine, schema, temp_table)
     target_cols = get_table_columns(tgt_engine, schema, target_table)
 
-    # --- หา key column ที่ตรงจริงใน temp/target แบบ case-insensitive ---
+    # หา key จริงแบบ case-insensitive
     temp_key = next((c for c in temp_cols if c.lower() == key_col.lower()), key_col)
     target_key = next((c for c in target_cols if c.lower() == key_col.lower()), key_col)
 
-    # --- ดึงคีย์ทั้งหมดจาก temp โดยใช้ temp_key ที่ถูกต้อง ---
+    # ดึง keys จาก temp (trim ลด mismatch)
     with tgt_engine.connect() as conn:
         rows = conn.execute(text(f"SELECT [{temp_key}] FROM {temp_fqn}")).fetchall()
-    keys = [r[0] for r in rows if r and r[0] is not None]
+
+    keys: List[str] = []
+    for r in rows:
+        if not r or r[0] is None:
+            continue
+        k = str(r[0]).strip()
+        if k:
+            keys.append(k)
 
     if not keys:
         logger.info("⚠️ No keys in temp table %s", temp_fqn)
         return 0, 0, []
 
-    # --- สร้าง mapping คอลัมน์แบบ case-insensitive: temp -> target ---
+    # mapping target col lower -> real col
     target_map: Dict[str, str] = {c.lower(): c for c in target_cols}
 
     compare_pairs: List[Tuple[str, str]] = []
     excluded: List[str] = []
 
     for c in temp_cols:
-        if c.lower() in {temp_key.lower(), "_row_order"}:
+        lc = c.lower()
+        if lc in {temp_key.lower(), "_row_order"}:
             continue
-        tgt_c = target_map.get(c.lower())
+        if lc in ignore_cols_set:
+            excluded.append(c)
+            continue
+
+        tgt_c = target_map.get(lc)
         if tgt_c:
             compare_pairs.append((c, tgt_c))  # (source/temp col, target col)
         else:
             excluded.append(c)
 
-    logger.info("Excluded columns (not in target): %s", excluded)
-    logger.info("Compare pairs (temp->target): %s", compare_pairs[:20])
+    logger.info("Excluded columns: %s", excluded)
+    logger.info("Compare pairs (temp->target) sample: %s", compare_pairs[:20])
 
     batches = chunk_list(keys, batch_size)
     inserted_total, updated_total = 0, 0
@@ -368,6 +419,7 @@ def merge_all_in_batches(
 
     for i, batch in enumerate(batches, start=1):
         logger.info("➡️ MERGE batch %s/%s (batch_size=%s)", i, len(batches), batch_size)
+
         with tgt_engine.begin() as conn:
             ins, upd, upd_rows = merge_batch_with_audit(
                 conn=conn,

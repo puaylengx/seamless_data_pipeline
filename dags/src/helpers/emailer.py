@@ -12,6 +12,7 @@ from email.utils import formataddr
 
 logger = logging.getLogger("airflow.task")
 
+
 @dataclass
 class EmailConfig:
     host: str
@@ -21,13 +22,15 @@ class EmailConfig:
     alert_email: str
     from_name: str = "Airflow Notification"
 
-    
     @property
     def recipients(self) -> list[str]:
         return [r.strip() for r in (self.alert_email or "").split(",") if r.strip()]
 
     def is_ready(self) -> bool:
-        return all([self.host, self.port, self.username, self.password, self.recipients])
+        return all(
+            [self.host, self.port, self.username, self.password, self.recipients]
+        )
+
 
 def _load_from_env() -> EmailConfig:
     return EmailConfig(
@@ -42,6 +45,7 @@ def _load_from_env() -> EmailConfig:
 
 def _load_from_airflow_connection(conn_id: str = "smtp_default") -> EmailConfig:
     from airflow.hooks.base import BaseHook  # Airflow runtime only
+
     conn = BaseHook.get_connection(conn_id)
     extra = conn.extra_dejson or {}
 
@@ -68,6 +72,7 @@ def _load_from_airflow_connection(conn_id: str = "smtp_default") -> EmailConfig:
         from_name=from_name,
     )
 
+
 def load_email_config_from_env(conn_id: str = "smtp_default") -> EmailConfig:
     """
     ✅ ไม่กระทบ DAG: ยังเรียกชื่อเดิมได้
@@ -86,14 +91,18 @@ def load_email_config_from_env(conn_id: str = "smtp_default") -> EmailConfig:
             logger.info("📧 Email config loaded from Airflow Connection: %s", conn_id)
             return cfg2
     except Exception:
-        logger.exception("⚠️ Failed to load email config from Airflow Connection: %s", conn_id)
+        logger.exception(
+            "⚠️ Failed to load email config from Airflow Connection: %s", conn_id
+        )
 
     # ยังไม่ครบ → คืนของเดิม (จะทำให้ send_summary_email ข้ามส่ง + log เตือน)
     logger.warning("⚠️ Email config not ready (ENV + Connection). Skipping email.")
     return cfg
 
 
-def send_summary_email(result: dict, email_cfg: EmailConfig, updated_rows_sample: list | None = None):
+def send_summary_email(
+    result: dict, email_cfg: EmailConfig, updated_rows_sample: list | None = None
+):
     # ใช้ env เดิม
     if not email_cfg.is_ready():
         logger.warning("⚠️ ข้ามการส่งอีเมล: SMTP/ENV ไม่ครบ")
@@ -106,31 +115,61 @@ def send_summary_email(result: dict, email_cfg: EmailConfig, updated_rows_sample
     subject = f"📊 สรุป {pipeline_name} — {run_date}"
 
     # subject    = f"📊 สรุป {result.get('subject')} — {result.get('run_date')}"
-    inserted   = int(result.get("inserted", 0) or 0)
-    updated    = int(result.get("updated", 0) or 0)
-    duration   = result.get("duration_sec", 0)
-    rows       = int(result.get("rows_total", result.get("rows", 0)) or 0)
-    batches    = int(result.get("batches_total", 0) or 0)
-    table      = result.get("target_table", result.get("target", "N/A"))
+    inserted = int(result.get("inserted", 0) or 0)
+    updated = int(result.get("updated", 0) or 0)
+    duration = result.get("duration_sec", 0)
+    rows = int(result.get("rows_total", result.get("rows", 0)) or 0)
+    batches = int(result.get("batches_total", 0) or 0)
+    table = result.get("target_table", result.get("target", "N/A"))
     status_txt = (result.get("status") or "").upper()
-    log_link   = result.get("log_file", "")
+    log_link = result.get("log_file", "")
     audit_link = result.get("audit_file", "")
 
     # สีป้ายสถานะ
-    status_bg = "#198754" if status_txt in ("SUCCESS", "OK") else ("#dc3545" if status_txt in ("FAILED", "FAIL") else "#6c757d")
+    status_bg = (
+        "#198754"
+        if status_txt in ("SUCCESS", "OK")
+        else ("#dc3545" if status_txt in ("FAILED", "FAIL") else "#6c757d")
+    )
 
     # --------- Build sample rows (max 10) ----------
     rows_html = ""
+
+    # ✅ function เลือก identifier
+    def _pick_identifier(u: dict):
+        student_code = u.get("studentCode")
+        if student_code is not None and str(student_code).strip() != "":
+            return str(student_code), "StudentCode"
+
+        # fallback → invoice
+        invoice = u.get("invoiceId")
+        if invoice is not None and str(invoice).strip() != "":
+            return str(invoice), "Invoice"
+
+        return "N/A", "Invoice"
+
+    # ✅ เลือก header จากตัวแรก
+    id_label = "Invoice"
+
+    if updated_rows_sample:
+        for u in updated_rows_sample:
+            _, id_label = _pick_identifier(u)
+            break
+
+    # ✅ build table
     if updated_rows_sample:
         for u in updated_rows_sample[:10]:
-            inv = _html.escape(str(u.get("invoiceId", "") or ""))
+            ident_val, _ = _pick_identifier(u)
+            ident_val = _html.escape(ident_val)
+
             for col, diff in (u.get("changes") or {}).items():
                 col = _html.escape(str(col))
                 old_val = _html.escape(str((diff or {}).get("old", "") or ""))
                 new_val = _html.escape(str((diff or {}).get("new", "") or ""))
+
                 rows_html += f"""
                     <tr>
-                        <td style="padding:10px 12px; border-bottom:1px solid #eee; white-space:nowrap;">{inv}</td>
+                        <td style="padding:10px 12px; border-bottom:1px solid #eee; white-space:nowrap;">{ident_val}</td>
                         <td style="padding:10px 12px; border-bottom:1px solid #eee;">{col}</td>
                         <td style="padding:10px 12px; border-bottom:1px solid #eee; color:#6c757d;">{old_val}</td>
                         <td style="padding:10px 12px; border-bottom:1px solid #eee; color:#198754; font-weight:600;">{new_val}</td>
@@ -233,7 +272,7 @@ def send_summary_email(result: dict, email_cfg: EmailConfig, updated_rows_sample
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; border:1px solid #e9ecef; border-radius:8px; overflow:hidden;">
                     <thead>
                       <tr style="background:#f8f9fa;">
-                        <th align="left" style="padding:10px 12px; font-size:12px; color:#495057; border-bottom:1px solid #e9ecef; white-space:nowrap;">Invoice</th>
+                        <th align="left" style="padding:10px 12px; font-size:12px; color:#495057; border-bottom:1px solid #e9ecef; white-space:nowrap;">{_html.escape(id_label)} </th>
                         <th align="left" style="padding:10px 12px; font-size:12px; color:#495057; border-bottom:1px solid #e9ecef;">Field</th>
                         <th align="left" style="padding:10px 12px; font-size:12px; color:#495057; border-bottom:1px solid #e9ecef;">Old</th>
                         <th align="left" style="padding:10px 12px; font-size:12px; color:#495057; border-bottom:1px solid #e9ecef;">New</th>
@@ -272,14 +311,20 @@ def send_summary_email(result: dict, email_cfg: EmailConfig, updated_rows_sample
     for attempt in range(3):
         try:
             if email_cfg.port == 465:
-                with smtplib.SMTP_SSL(email_cfg.host, email_cfg.port, timeout=10) as server:
+                with smtplib.SMTP_SSL(
+                    email_cfg.host, email_cfg.port, timeout=10
+                ) as server:
                     server.login(email_cfg.username, email_cfg.password)
-                    server.sendmail(email_cfg.username, email_cfg.recipients, msg.as_string())
+                    server.sendmail(
+                        email_cfg.username, email_cfg.recipients, msg.as_string()
+                    )
             else:
                 with smtplib.SMTP(email_cfg.host, email_cfg.port, timeout=10) as server:
                     server.starttls()
                     server.login(email_cfg.username, email_cfg.password)
-                    server.sendmail(email_cfg.username, email_cfg.recipients, msg.as_string())
+                    server.sendmail(
+                        email_cfg.username, email_cfg.recipients, msg.as_string()
+                    )
 
             logger.info("📧 ส่งอีเมลสรุปสำเร็จ → %s", email_cfg.alert_email)
             break

@@ -23,12 +23,24 @@ from src.helpers.emailer import load_email_config_from_env, send_summary_email
 # ------------------------------------------------------------------
 # Pipeline modules
 # ------------------------------------------------------------------
-from src.dgsi.staging_student.extractors.staging_student_sql_server import build_engine_from_airflow_conn,extract_staging_student, extract_status_dataframe
-from src.dgsi.staging_student.transformers.staging_student import transform_staging_student
-from src.dgsi.staging_student.loaders.staging_student_sql import upload_temp_table, ensure_target_table, merge_all_in_batches, drop_temp_table
+from src.dgsi.staging_student.extractors.staging_student_sql_server import (
+    build_engine_from_airflow_conn,
+    extract_staging_student,
+    extract_status_dataframe,
+)
+from src.dgsi.staging_student.transformers.staging_student import (
+    transform_staging_student,
+)
+from src.dgsi.staging_student.loaders.staging_student_sql import (
+    upload_temp_table,
+    ensure_target_table,
+    merge_all_in_batches,
+    drop_temp_table,
+)
 
 logger = logging.getLogger("airflow.task")
 TZ = "Asia/Bangkok"
+
 
 # ======================================================================
 # DAG
@@ -37,7 +49,7 @@ TZ = "Asia/Bangkok"
     dag_id="staging_student_pipeline",
     start_date=pendulum.datetime(2026, 3, 17, tz=TZ),
     # schedule="@weekly",
-    schedule="00 15 * * 5", # นาที  ชั่วโมง  วันของเดือน  เดือน  วันของสัปดาห์
+    schedule="00 15 * * 5",  # นาที  ชั่วโมง  วันของเดือน  เดือน  วันของสัปดาห์
     catchup=False,
     default_args={"retries": 2},
     tags=["dgsi", "staging", "student", "staging-style"],
@@ -65,12 +77,12 @@ def staging_student_etl():
         # ✅ ดึง Connection object จาก Airflow
         src_conn = BaseHook.get_connection("mssql_student_info")
         status_conn = BaseHook.get_connection("mssql_data_op2")
-        
+
         df_student = extract_staging_student(src_conn)
-        df_status  = extract_status_dataframe(status_conn)
-        
+        df_status = extract_status_dataframe(status_conn)
+
         df = pd.merge(df_student, df_status, on="studentCode", how="left")
-                      
+
         run_id = ctx["run_id"].replace("|", "_").replace(":", "_")
         out_path = DATA_DIR / "extract" / f"staging_student_{run_id}.parquet"
         out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -155,8 +167,12 @@ def staging_student_etl():
         # -----------------------
         # config / connections
         # -----------------------
-        job = get_job_config_staging()             # ต้องมี: target_schema, target_table, key_col, batch_size
-        tgt = get_conn("mssql_data_op")    # หรือเปลี่ยนเป็น conn_id target ของ staging student
+        job = (
+            get_job_config_staging()
+        )  # ต้องมี: target_schema, target_table, key_col, batch_size
+        tgt = get_conn(
+            "mssql_data_op"
+        )  # หรือเปลี่ยนเป็น conn_id target ของ staging student
 
         # build target engine (เหมือน finance invoice)
         tgt_engine = build_engine_from_airflow_conn(tgt)
@@ -171,7 +187,9 @@ def staging_student_etl():
 
         # (optional) กัน key missing
         if job.key_col not in df.columns:
-            raise AirflowFailException(f"Missing key column '{job.key_col}' in dataframe")
+            raise AirflowFailException(
+                f"Missing key column '{job.key_col}' in dataframe"
+            )
 
         # -----------------------
         # upload temp + ensure target
@@ -196,7 +214,7 @@ def staging_student_etl():
             target_table=job.target_table,
             key_col=job.key_col,
             batch_size=job.batch_size,
-            audit_writer=write_audit_line,   # ✅ audit แบบ finance invoice
+            audit_writer=write_audit_line,  # ✅ audit แบบ finance invoice
         )
 
         # drop temp
@@ -242,8 +260,9 @@ def staging_student_etl():
     start_ts = mark_start()
     raw = extract_to_file()
     clean = transform_file(raw)
-    result = load(clean["path"],clean, start_ts)
+    result = load(clean["path"], clean, start_ts)
     notify(result)
+
 
 # DAG object
 staging_student_dag = staging_student_etl()

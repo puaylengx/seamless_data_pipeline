@@ -119,6 +119,7 @@
     .badge { display: inline-block; padding: .12rem .5rem; border-radius: 999px; font-size: .75rem; font-weight: 600; }
     .badge-req { background: #fee2e2; color: #b91c1c; }
     .badge-opt { background: #fef9c3; color: #92400e; }
+    .badge-init { background: #ede9fe; color: #6d28d9; }
     .badge-blue { background: #dbeafe; color: #1d4ed8; }
 
     /* CONN CARD */
@@ -447,21 +448,34 @@ cd seamless_data_pipeline</pre>
           <h2>ตั้งค่า .env</h2>
         </div>
         <div class="path-label shared">ทั้ง Path A และ Path B ทำขั้นตอนนี้ร่วมกัน</div>
-        <p>สร้าง / แก้ไขไฟล์ <code>.env</code> ที่ root ของโปรเจกต์:</p>
-        <pre># UID ของ Airflow container (Linux ให้รัน: echo $UID)
+        <p>คัดลอกจาก <code>.env.example</code> แล้วกรอกค่าจริง:</p>
+        <pre>cp .env.example .env</pre>
+        <p>ค่าที่ต้องแก้ขั้นต่ำ:</p>
+        <pre># ── Airflow ─────────────────────────────────────────────────
 AIRFLOW_UID=50000
 
-# ===================== SMTP (Email Notification) =====================
+# ── Web UI Admin (ใช้ได้เฉพาะก่อนรัน airflow-init ครั้งแรก) ──
+_AIRFLOW_WWW_USER_USERNAME=airflow
+_AIRFLOW_WWW_USER_PASSWORD=airflow
+
+# ── JWT Secret (optional สำหรับ local dev) ───────────────────
+# ถ้าไม่ set จะใช้ค่า default "airflow_jwt_secret"
+# แนะนำให้ set สำหรับ shared / production environment
+# สร้างด้วย: python -c "import secrets; print(secrets.token_hex(32))"
+AIRFLOW__API_AUTH__JWT_SECRET=change_me_to_a_random_secret
+AIRFLOW__API_AUTH__JWT_ISSUER=airflow
+
+# ── SMTP ─────────────────────────────────────────────────────
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
 SMTP_STARTTLS=false
 SMTP_SSL=true
 SMTP_USER=your.email@gmail.com
-SMTP_PASSWORD=your_app_password      # Gmail App Password (16 หลัก)
+SMTP_PASSWORD=xxxx xxxx xxxx xxxx
 SMTP_MAIL_FROM=Airflow Notification
 ALERT_EMAILS=recipient@example.com
 
-# ===================== Finance Invoice Job Config ====================
+# ── Finance Invoice ──────────────────────────────────────────
 FIN_INV_TARGET_SCHEMA=dbo
 FIN_INV_TARGET_TABLE=finance_invoice_20251110
 FIN_INV_KEY_COL=invoiceId
@@ -477,15 +491,28 @@ FIN_INV_BATCH_SIZE=1000</pre>
         <table>
           <thead><tr><th>Variable</th><th>ค่าตัวอย่าง</th><th>Required</th><th>คำอธิบาย</th></tr></thead>
           <tbody>
-            <tr><td>AIRFLOW_UID</td><td>50000</td><td><span class="badge badge-req">required</span></td><td>User ID ใน container</td></tr>
+            <tr><td>AIRFLOW_UID</td><td>50000</td><td><span class="badge badge-req">required</span></td><td>User ID ใน container (Windows ใช้ 50000)</td></tr>
+            <tr><td>_AIRFLOW_WWW_USER_USERNAME</td><td>airflow</td><td><span class="badge badge-init">init-only</span></td><td>username ของ admin — ตั้งได้แค่ก่อน airflow-init ครั้งแรก</td></tr>
+            <tr><td>_AIRFLOW_WWW_USER_PASSWORD</td><td>airflow</td><td><span class="badge badge-init">init-only</span></td><td>password ของ admin — ตั้งได้แค่ก่อน airflow-init ครั้งแรก</td></tr>
+            <tr><td>AIRFLOW__API_AUTH__JWT_SECRET</td><td>random hex 64 chars</td><td><span class="badge badge-opt">optional</span></td><td>JWT signing secret — default คือ "airflow_jwt_secret" ถ้าไม่ set</td></tr>
+            <tr><td>AIRFLOW__API_AUTH__JWT_ISSUER</td><td>airflow</td><td><span class="badge badge-opt">optional</span></td><td>JWT issuer claim — ปกติไม่ต้องเปลี่ยน</td></tr>
             <tr><td>SMTP_HOST</td><td>smtp.gmail.com</td><td><span class="badge badge-req">required</span></td><td>SMTP server สำหรับ email</td></tr>
             <tr><td>SMTP_PORT</td><td>465</td><td><span class="badge badge-req">required</span></td><td>465 = SSL, 587 = STARTTLS</td></tr>
             <tr><td>SMTP_USER</td><td>user@gmail.com</td><td><span class="badge badge-req">required</span></td><td>บัญชี Gmail ที่ใช้ส่ง</td></tr>
-            <tr><td>SMTP_PASSWORD</td><td>xxxx xxxx xxxx xxxx</td><td><span class="badge badge-req">required</span></td><td>Gmail App Password (16 หลัก)</td></tr>
-            <tr><td>ALERT_EMAILS</td><td>admin@example.com</td><td><span class="badge badge-req">required</span></td><td>ผู้รับ email แจ้งเตือน</td></tr>
+            <tr><td>SMTP_PASSWORD</td><td>xxxx xxxx xxxx xxxx</td><td><span class="badge badge-req">required</span></td><td>Gmail App Password (16 หลัก) ไม่ใช่ password บัญชีปกติ</td></tr>
+            <tr><td>ALERT_EMAILS</td><td>admin@example.com</td><td><span class="badge badge-req">required</span></td><td>ผู้รับ email แจ้งเตือน คั่นหลายที่อยู่ด้วย comma</td></tr>
             <tr><td>FIN_INV_BATCH_SIZE</td><td>1000</td><td><span class="badge badge-opt">optional</span></td><td>จำนวนแถวต่อ batch ใน MERGE</td></tr>
           </tbody>
         </table>
+
+        <div class="callout info">
+          <span class="callout-icon">ℹ️</span>
+          <div>
+            <strong>init-only variables</strong> — <code>_AIRFLOW_WWW_USER_USERNAME</code> และ <code>_AIRFLOW_WWW_USER_PASSWORD</code>
+            อ่านแค่ตอนรัน <code>airflow-init</code> ครั้งแรกเท่านั้น ถ้า Airflow รันอยู่แล้วและต้องการเปลี่ยน
+            ดูวิธีได้ที่ <a href="#tips">Section 10 — เปลี่ยน Username / Password ภายหลัง</a>
+          </div>
+        </div>
       </div>
 
       <!-- 5. CONNECTIONS -->
@@ -691,6 +718,67 @@ docker compose down --volumes --remove-orphans</pre>
 
         <h3 class="sub">Gmail App Password</h3>
         <p>Google Account → Security → เปิด 2-Step Verification → App passwords → สร้าง password 16 หลักสำหรับ Airflow (ไม่ใช่ password บัญชีปกติ)</p>
+
+        <h3 class="sub">เปลี่ยน JWT Secret ภายหลัง</h3>
+        <p><code>AIRFLOW__API_AUTH__JWT_SECRET</code> อ่านทุกครั้งที่ container start — เพิ่มหรือเปลี่ยนได้ตลอดเวลา:</p>
+        <div class="steps" style="counter-reset:step;">
+          <div class="step">
+            <h3>Generate random secret</h3>
+            <pre>python -c "import secrets; print(secrets.token_hex(32))"</pre>
+          </div>
+          <div class="step">
+            <h3>เพิ่มหรือแก้ค่าใน <code>.env</code></h3>
+            <pre>AIRFLOW__API_AUTH__JWT_SECRET=&lt;ค่าที่ได้จากข้อ 1&gt;
+AIRFLOW__API_AUTH__JWT_ISSUER=airflow</pre>
+          </div>
+          <div class="step">
+            <h3>Restart containers</h3>
+            <pre>docker compose down
+docker compose up -d</pre>
+            <div class="callout warn" style="margin-top:.65rem;">
+              <span class="callout-icon">⚠️</span>
+              <div>JWT token เดิมทั้งหมด <strong>invalid ทันที</strong> — user ที่ login อยู่ต้อง login ใหม่ แต่ DAG runs และ data ไม่กระทบ</div>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="sub">เปลี่ยน Username / Password ภายหลัง</h3>
+        <p><code>_AIRFLOW_WWW_USER_USERNAME</code> และ <code>_AIRFLOW_WWW_USER_PASSWORD</code> ใช้ได้เฉพาะตอนรัน <code>airflow-init</code> ครั้งแรก — หลังจากนั้นต้องใช้ CLI หรือ UI แทน</p>
+
+        <table>
+          <thead><tr><th>กรณี</th><th>วิธี</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>ยังไม่เคยรัน airflow-init</td>
+              <td>แก้ <code>.env</code> ตามต้องการ แล้วรัน <code>docker compose up airflow-init</code> ปกติ</td>
+            </tr>
+            <tr>
+              <td>รัน airflow-init ไปแล้ว</td>
+              <td>ใช้ CLI หรือ UI ด้านล่าง</td>
+            </tr>
+            <tr>
+              <td>ต้องการ reset ทุกอย่าง</td>
+              <td><code>docker compose down --volumes</code> แล้วแก้ <code>.env</code> และรัน init ใหม่ (ข้อมูล Airflow หาย)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 class="sub" style="margin-top:1.25rem;">เปลี่ยน Password ผ่าน CLI</h3>
+        <pre>docker compose exec airflow-apiserver airflow users set-password \
+  --username airflow \
+  --password &lt;new_password&gt;</pre>
+
+        <h3 class="sub">เปลี่ยน Password ผ่าน UI</h3>
+        <p>Admin → Security → List Users → คลิก ✏️ Edit → แก้ช่อง Password → Save</p>
+
+        <h3 class="sub">สร้าง User ใหม่ผ่าน CLI</h3>
+        <pre>docker compose exec airflow-apiserver airflow users create \
+  --username admin \
+  --password &lt;password&gt; \
+  --role Admin \
+  --email admin@example.com \
+  --firstname Admin \
+  --lastname User</pre>
       </div>
 
     </div><!-- /report-body -->

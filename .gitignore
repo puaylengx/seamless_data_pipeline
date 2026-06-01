@@ -3,11 +3,29 @@
 
 .venv
 
+# ห้าม commit credentials
 .env
 
 __pycache__
+*.pyc
 
-config/*
+# Airflow logs — เก็บแค่ .gitkeep เพื่อสร้าง directory ใน repo
 logs/*
+!logs/.gitkeep
+
+# GCP Service Account keys และ config ที่มี secrets
+config/*
+config/airflow.cfg
+!config/secrets/
+config/secrets/muic-data-prod.json
+!config/secrets/.gitkeep
+
+# Intermediate data files
 /dags/data/*
+!/dags/data/.gitkeep
+
+# plugins folder (ว่างไว้รอ)
+plugins/*
+!plugins/.gitkeep
+
 code/data

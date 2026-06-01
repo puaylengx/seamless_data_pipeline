@@ -233,6 +233,69 @@
       border-right: 8px solid #94a3b8;
     }
 
+    /* Component Detail Cards */
+    .comp-section { margin-top: 2rem; }
+    .comp-section-title {
+      font-size: .8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: .75rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .comp-section-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .comp-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: .75rem;
+      margin-bottom: 1rem;
+    }
+    .comp-card {
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 1rem;
+      font-size: .85rem;
+    }
+    .comp-card-head {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-weight: 700;
+      margin-bottom: .5rem;
+      font-size: .9rem;
+    }
+    .comp-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-source  { background: #16a34a; }
+    .dot-airflow { background: #2563eb; }
+    .dot-queue   { background: #dc2626; }
+    .dot-meta    { background: #475569; }
+    .dot-dest    { background: #7c3aed; }
+    .dot-vol     { background: #0284c7; }
+    .comp-card p { color: var(--muted); line-height: 1.55; font-size: .83rem; }
+    .comp-card .tag {
+      display: inline-block;
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: .1rem .45rem;
+      font-family: "Courier New", monospace;
+      font-size: .75rem;
+      color: #475569;
+      margin: .25rem .2rem 0 0;
+    }
+
     /* Volumes bar */
     .arch-volumes {
       margin-top: 1.25rem;
@@ -407,6 +470,155 @@
         <span class="vol-badge">./plugins</span>
         <span style="margin-left:auto;font-size:.75rem;">— mounted เข้าทุก Airflow container</span>
       </div>
+
+      <!-- ── Component Details ── -->
+
+      <!-- Data Sources -->
+      <div class="comp-section">
+        <div class="comp-section-title" style="color:#15803d;">Data Sources</div>
+        <div class="comp-grid">
+          <div class="comp-card">
+            <div class="comp-card-head">
+              <span class="comp-dot dot-source"></span>
+              🗄️ MSSQL Server (DGSI)
+            </div>
+            <p>ฐานข้อมูลหลักของมหาวิทยาลัย เก็บข้อมูล Finance Invoice และนักศึกษา เชื่อมต่อผ่าน <strong>pymssql</strong> + SQLAlchemy ใช้ Airflow Connection ID</p>
+            <span class="tag">mssql_student_info</span>
+            <span class="tag">port 1433</span>
+          </div>
+          <div class="comp-card">
+            <div class="comp-card-head">
+              <span class="comp-dot dot-source"></span>
+              🐘 PostgreSQL (PaperCut)
+            </div>
+            <p>ฐานข้อมูลระบบพิมพ์เอกสาร PaperCut เก็บ log การใช้เครื่องพิมพ์รายวัน Airflow ดึงข้อมูลมา aggregate เป็นรายเดือน</p>
+            <span class="tag">postgresql_printer_solution</span>
+            <span class="tag">port 5432</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Airflow Services -->
+      <div class="comp-section">
+        <div class="comp-section-title" style="color:#1d4ed8;">Airflow Services (Docker Compose)</div>
+        <div class="comp-grid">
+          <div class="comp-card">
+            <div class="comp-card-head">
+              <span class="comp-dot dot-airflow"></span>
+              API Server
+            </div>
+            <p>ให้บริการ <strong>Web UI</strong> ที่ <code>:8080</code> และ REST API สำหรับ trigger DAG, ดู task logs, จัดการ Connections และ Variables ทั้งหมด</p>
+            <span class="tag">localhost:8080</span>
+          </div>
+          <div class="comp-card">
+            <div class="comp-card-head">
+              <span class="comp-dot dot-airflow"></span>
+              Scheduler
+            </div>
+            <p>ตรวจ schedule ของทุก DAG อย่างต่อเนื่อง เมื่อถึงเวลาจะสร้าง DAG Run และส่ง task เข้า Redis queue เพื่อให้ Worker รับไปทำงาน</p>
+            <span class="tag">health :8974</span>
+          </div>
+          <div class="comp-card">
+            <div class="comp-card-head">
+              <span class="comp-dot dot-airflow"></span>
+              DAG Processor
+            </div>
+            <p>parse ไฟล์ Python ใน <code>./dags</code> แยก process จาก Scheduler (Airflow 3.x) ช่วยให้ parse error ใน DAG ไม่กระทบ Scheduler หลัก</p>
+            <span class="tag">airflow 3.x</span>
+          </div>
+          <div class="comp-card">
+            <div class="comp-card-head">
+              <span class="comp-dot dot-airflow"></span>
+              Celery Worker
+            </div>
+            <p>รับ task จาก Redis queue แล้ว <strong>execute จริง</strong> — ทุก task ใน pipeline (extract, transform, validate, load, notify) รันที่นี่ สามารถ scale เป็นหลาย worker ได้</p>
+            <span class="tag">CeleryExecutor</span>
+          </div>
+          <div class="comp-card">
+            <div class="comp-card-head">
+              <span class="comp-dot dot-airflow"></span>
+              Triggerer
+            </div>
+            <p>จัดการ <strong>deferred tasks</strong> และ async sensors แบบ event-driven ช่วยลด thread ที่ต้องรอ I/O ให้ Worker ไม่ถูก block</p>
+            <span class="tag">async</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Infrastructure -->
+      <div class="comp-section">
+        <div class="comp-section-title" style="color:#475569;">Infrastructure</div>
+        <div class="comp-grid">
+          <div class="comp-card">
+            <div class="comp-card-head">
+              <span class="comp-dot dot-queue"></span>
+              🔴 Redis (Message Broker)
+            </div>
+            <p>รับ task จาก Scheduler แล้วกระจายไปยัง Celery Worker เป็น <strong>in-memory queue</strong> ทำให้ส่ง task เร็วและรองรับ Worker หลายตัวพร้อมกัน</p>
+            <span class="tag">port 6379</span>
+            <span class="tag">redis:7.2</span>
+          </div>
+          <div class="comp-card">
+            <div class="comp-card-head">
+              <span class="comp-dot dot-meta"></span>
+              🗃️ PostgreSQL (Metadata DB)
+            </div>
+            <p>เก็บข้อมูลภายในของ Airflow ทั้งหมด — DAG runs, task instances, XCom (ค่าส่งระหว่าง task), Connections, Variables และ User accounts</p>
+            <span class="tag">port 5432</span>
+            <span class="tag">postgres:16</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Destinations -->
+      <div class="comp-section">
+        <div class="comp-section-title" style="color:#6d28d9;">Destinations</div>
+        <div class="comp-grid">
+          <div class="comp-card">
+            <div class="comp-card-head">
+              <span class="comp-dot dot-dest"></span>
+              🗄️ MSSQL Target (data_op)
+            </div>
+            <p>ปลายทางสำหรับ 2 pipelines ใช้วิธี <strong>MERGE (Upsert)</strong> แบบ batch — อัปโหลดข้อมูลเข้า temp table ก่อน แล้ว MERGE เข้า target ทีละ 1,000 rows พร้อม audit log</p>
+            <span class="tag">Finance Invoice</span>
+            <span class="tag">Staging Student</span>
+            <span class="tag">batch 1,000</span>
+          </div>
+          <div class="comp-card">
+            <div class="comp-card-head">
+              <span class="comp-dot dot-dest"></span>
+              ☁️ Google BigQuery
+            </div>
+            <p>ปลายทาง cloud สำหรับ 2 pipelines — <strong>Student Info</strong> ใช้ MERGE upsert ด้วย key <code>student_id</code> / <strong>Printer</strong> ใช้ insert-only dedup ด้วย composite key 9 columns</p>
+            <span class="tag">Student Info → Education dataset</span>
+            <span class="tag">Printer → PaperCut dataset</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shared Volumes detail -->
+      <div class="comp-section">
+        <div class="comp-section-title" style="color:#0284c7;">Shared Volumes</div>
+        <div class="comp-grid">
+          <div class="comp-card">
+            <div class="comp-card-head"><span class="comp-dot dot-vol"></span><code>./dags</code></div>
+            <p>DAG Python files และ <code>src/</code> modules ทั้งหมด — Worker ทุกตัวต้องอ่านไฟล์เดียวกัน การแก้ไขไฟล์มีผลทันทีโดยไม่ต้อง rebuild image</p>
+          </div>
+          <div class="comp-card">
+            <div class="comp-card-head"><span class="comp-dot dot-vol"></span><code>./logs</code></div>
+            <p>Task execution logs ทุก run — Airflow UI อ่านจาก volume นี้เพื่อแสดงใน Log tab ของแต่ละ task instance</p>
+          </div>
+          <div class="comp-card">
+            <div class="comp-card-head"><span class="comp-dot dot-vol"></span><code>./config</code></div>
+            <p>ไฟล์ <code>airflow.cfg</code> สำหรับ override ค่า config และ <code>secrets/</code> สำหรับ GCP Service Account JSON key</p>
+          </div>
+          <div class="comp-card">
+            <div class="comp-card-head"><span class="comp-dot dot-vol"></span><code>./plugins</code></div>
+            <p>Custom Airflow plugins เช่น Operator หรือ Hook ที่พัฒนาเพิ่มเติม — โหลดอัตโนมัติเมื่อ Airflow เริ่มต้น</p>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 

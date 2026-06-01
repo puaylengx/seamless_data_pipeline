@@ -3,165 +3,242 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seamless Data Pipeline — Documentation</title>
+  <title>Seamless Data Pipeline — Technical Report</title>
   <style>
     :root {
       --primary: #2563eb;
       --primary-dark: #1d4ed8;
       --accent: #0ea5e9;
-      --bg: #f8fafc;
+      --bg: #f1f5f9;
       --card: #ffffff;
       --border: #e2e8f0;
       --text: #1e293b;
       --muted: #64748b;
       --success: #16a34a;
       --warning: #d97706;
-      --code-bg: #1e293b;
-      --code-text: #e2e8f0;
+      --danger: #dc2626;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.6;
+      line-height: 1.7;
     }
     a { color: var(--primary); text-decoration: none; }
     a:hover { text-decoration: underline; }
 
-    /* NAV */
+    /* ── NAV ── */
     nav {
       background: var(--primary);
       padding: 0 2rem;
       display: flex;
       align-items: center;
       gap: 2rem;
-      height: 56px;
+      height: 52px;
       position: sticky; top: 0; z-index: 100;
       box-shadow: 0 2px 8px rgba(0,0,0,.2);
     }
-    nav .brand { color: #fff; font-weight: 700; font-size: 1.1rem; white-space: nowrap; }
-    nav a { color: rgba(255,255,255,.85); font-size: .9rem; padding: 4px 10px; border-radius: 4px; }
-    nav a:hover, nav a.active { background: rgba(255,255,255,.15); color: #fff; text-decoration: none; }
+    nav .brand { color: #fff; font-weight: 700; font-size: 1rem; white-space: nowrap; }
+    nav a { color: rgba(255,255,255,.8); font-size: .88rem; padding: 3px 10px; border-radius: 4px; }
+    nav a:hover, nav a.active { background: rgba(255,255,255,.18); color: #fff; text-decoration: none; }
 
-    /* LAYOUT */
-    .container { max-width: 1100px; margin: 0 auto; padding: 2.5rem 1.5rem; }
-
-    /* HERO */
-    .hero {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-      color: #fff;
-      padding: 3.5rem 2rem;
-      text-align: center;
-      border-radius: 12px;
-      margin-bottom: 2.5rem;
+    /* ── LAYOUT ── */
+    .layout {
+      display: flex;
+      max-width: 1180px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      gap: 1.75rem;
+      align-items: flex-start;
     }
-    .hero h1 { font-size: 2rem; font-weight: 800; margin-bottom: .5rem; }
-    .hero p { font-size: 1.05rem; opacity: .9; }
 
-    /* CARDS GRID */
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 2.5rem; }
-    .card {
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 210px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 68px;
+    }
+    .sidebar-box {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 1.5rem;
+      padding: 1.1rem 1rem;
       box-shadow: 0 1px 4px rgba(0,0,0,.06);
-      transition: box-shadow .15s;
     }
-    .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.1); }
-    .card-icon { font-size: 2rem; margin-bottom: .75rem; }
-    .card h3 { font-size: 1.05rem; margin-bottom: .5rem; color: var(--primary-dark); }
-    .card p { font-size: .9rem; color: var(--muted); }
-    .card a.btn {
-      display: inline-block;
-      margin-top: 1rem;
-      padding: .4rem .9rem;
+    .sidebar-box h4 {
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      margin-bottom: .75rem;
+    }
+    .sidebar-box ol { list-style: none; padding: 0; counter-reset: toc; }
+    .sidebar-box li { counter-increment: toc; margin-bottom: .1rem; }
+    .sidebar-box li a {
+      display: flex;
+      align-items: baseline;
+      gap: .4rem;
+      font-size: .82rem;
+      color: var(--muted);
+      padding: .25rem .4rem;
+      border-radius: 5px;
+      line-height: 1.4;
+    }
+    .sidebar-box li a::before {
+      content: counter(toc) ".";
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+    .sidebar-box li a:hover { background: #f1f5f9; color: var(--text); text-decoration: none; }
+    .sidebar-links { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: .4rem; }
+    .sidebar-links a {
+      display: flex;
+      align-items: center;
+      gap: .45rem;
+      font-size: .82rem;
+      background: var(--primary);
+      color: #fff;
+      padding: .4rem .75rem;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    .sidebar-links a:hover { background: var(--primary-dark); text-decoration: none; }
+
+    /* ── REPORT PAPER ── */
+    .report {
+      flex: 1;
+      min-width: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.07);
+      overflow: hidden;
+    }
+
+    /* Cover */
+    .report-cover {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      padding: 3rem 3rem 2.5rem;
+      color: #fff;
+    }
+    .report-cover .doc-label {
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      opacity: .75;
+      margin-bottom: .75rem;
+    }
+    .report-cover h1 { font-size: 1.9rem; font-weight: 800; line-height: 1.2; margin-bottom: .6rem; }
+    .report-cover .subtitle { font-size: 1rem; opacity: .88; margin-bottom: 1.75rem; }
+    .report-meta {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      font-size: .82rem;
+      opacity: .8;
+      border-top: 1px solid rgba(255,255,255,.25);
+      padding-top: 1.25rem;
+    }
+    .report-meta span strong { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; opacity: .75; margin-bottom: .1rem; }
+
+    /* Body */
+    .report-body { padding: 2.5rem 3rem; }
+
+    /* Section */
+    .section { margin-bottom: 2.75rem; scroll-margin-top: 68px; }
+    .section-heading {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: .65rem;
+      border-bottom: 2px solid var(--border);
+    }
+    .section-num {
+      width: 2rem; height: 2rem;
       background: var(--primary);
       color: #fff;
       border-radius: 6px;
       font-size: .85rem;
-      font-weight: 600;
+      font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
     }
-    .card a.btn:hover { background: var(--primary-dark); text-decoration: none; }
+    .section-heading h2 { font-size: 1.2rem; color: var(--primary-dark); font-weight: 700; }
 
-    /* SECTION */
-    .section { margin-bottom: 2.5rem; }
-    .section h2 {
-      font-size: 1.35rem;
-      border-left: 4px solid var(--primary);
-      padding-left: .75rem;
-      margin-bottom: 1.25rem;
-      color: var(--primary-dark);
-    }
+    p { font-size: .93rem; color: var(--text); margin-bottom: .85rem; }
 
-    /* TECH STACK TABLE */
-    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
-    th { background: var(--primary); color: #fff; text-align: left; padding: .6rem .9rem; }
-    td { padding: .6rem .9rem; border-bottom: 1px solid var(--border); }
-    tr:nth-child(even) td { background: #f1f5f9; }
-
-    /* BADGE */
-    .badge {
-      display: inline-block;
-      padding: .15rem .55rem;
-      border-radius: 999px;
-      font-size: .78rem;
-      font-weight: 600;
-    }
-    .badge-blue { background: #dbeafe; color: #1d4ed8; }
-    .badge-green { background: #dcfce7; color: #15803d; }
-    .badge-orange { background: #ffedd5; color: #c2410c; }
-
-    /* ARCH DIAGRAM */
-    .arch-diagram {
-      background: #f1f5f9;
+    /* ── QUICK ACCESS CARDS ── */
+    .quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .quick-card {
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 2rem 1.5rem;
+      border-radius: 10px;
+      padding: 1.1rem;
+      background: #f8fafc;
+      transition: box-shadow .15s, transform .15s;
+    }
+    .quick-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.1); transform: translateY(-2px); }
+    .quick-card .icon { font-size: 1.6rem; margin-bottom: .5rem; }
+    .quick-card h3 { font-size: .95rem; color: var(--primary-dark); margin-bottom: .3rem; }
+    .quick-card p { font-size: .82rem; color: var(--muted); margin: 0 0 .75rem; }
+    .quick-card a.btn {
+      display: inline-block;
+      background: var(--primary);
+      color: #fff;
+      font-size: .8rem;
+      font-weight: 600;
+      padding: .3rem .8rem;
+      border-radius: 5px;
+    }
+    .quick-card a.btn:hover { background: var(--primary-dark); text-decoration: none; }
+
+    /* ── ARCH DIAGRAM ── */
+    .arch-diagram {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.75rem 1.5rem;
       overflow-x: auto;
+      margin-bottom: 1.75rem;
     }
     .arch-cols {
       display: grid;
-      grid-template-columns: 1fr auto 1fr auto 1fr;
-      gap: 0;
+      grid-template-columns: 1fr 56px 1fr 56px 1fr;
       align-items: center;
-      min-width: 640px;
+      min-width: 580px;
+      gap: 0;
     }
-    .arch-col { display: flex; flex-direction: column; gap: .75rem; }
+    .arch-col { display: flex; flex-direction: column; gap: .6rem; }
     .arch-col-label {
       text-align: center;
-      font-size: .75rem;
+      font-size: .7rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: .08em;
-      margin-bottom: .25rem;
-      padding: .25rem .75rem;
+      padding: .2rem .65rem;
       border-radius: 999px;
-      display: inline-block;
       align-self: center;
+      margin-bottom: .15rem;
     }
     .label-source { background: #dcfce7; color: #15803d; }
     .label-core   { background: #dbeafe; color: #1d4ed8; }
     .label-dest   { background: #ede9fe; color: #6d28d9; }
 
-    /* Node boxes */
     .arch-node {
-      border-radius: 10px;
-      padding: .7rem 1rem;
-      font-size: .82rem;
+      border-radius: 8px;
+      padding: .6rem .85rem;
+      font-size: .8rem;
       font-weight: 600;
       text-align: center;
-      line-height: 1.4;
-      box-shadow: 0 2px 6px rgba(0,0,0,.1);
+      line-height: 1.35;
+      box-shadow: 0 1px 4px rgba(0,0,0,.1);
     }
-    .arch-node small {
-      display: block;
-      font-size: .72rem;
-      font-weight: 400;
-      opacity: .8;
-      margin-top: .15rem;
-    }
+    .arch-node small { display: block; font-size: .7rem; font-weight: 400; opacity: .82; margin-top: .1rem; }
     .node-source  { background: #fff; border: 2px solid #16a34a; color: #15803d; }
     .node-airflow { background: #2563eb; color: #fff; }
     .node-queue   { background: #dc2626; color: #fff; }
@@ -169,164 +246,153 @@
     .node-dest-sql { background: #fff; border: 2px solid #7c3aed; color: #6d28d9; }
     .node-dest-bq  { background: #fff; border: 2px solid #0284c7; color: #0369a1; }
 
-    /* Center column: Airflow box */
-    .arch-center {
-      display: flex;
-      flex-direction: column;
-      gap: .6rem;
-    }
     .arch-center-outer {
       background: #eff6ff;
       border: 2px dashed #93c5fd;
-      border-radius: 12px;
-      padding: 1rem .75rem;
+      border-radius: 10px;
+      padding: .85rem .65rem;
       display: flex;
       flex-direction: column;
-      gap: .6rem;
+      gap: .5rem;
     }
     .arch-center-label {
       text-align: center;
-      font-size: .7rem;
+      font-size: .68rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: .06em;
       color: #3b82f6;
-      margin-bottom: .1rem;
+      margin-bottom: .05rem;
     }
 
-    /* Arrows */
-    .arch-arrow {
+    .arch-arrow-col {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: .5rem;
-      padding: 0 .5rem;
+      gap: .8rem;
+      padding: 0 .25rem;
     }
-    .arch-arrow-line {
-      width: 48px;
-      height: 2px;
+    .arrow-wrap { display: flex; flex-direction: column; align-items: center; gap: .2rem; }
+    .arrow-line {
+      width: 40px; height: 2px;
       background: #94a3b8;
       position: relative;
     }
-    .arch-arrow-line::after {
+    .arrow-line::after {
       content: "";
       position: absolute;
       right: -1px; top: -4px;
-      width: 0; height: 0;
       border-top: 5px solid transparent;
       border-bottom: 5px solid transparent;
-      border-left: 8px solid #94a3b8;
+      border-left: 7px solid #94a3b8;
     }
-    .arch-arrow-label {
-      font-size: .67rem;
+    .arrow-label { font-size: .63rem; color: var(--muted); white-space: nowrap; }
+
+    .arch-volumes {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      font-size: .78rem;
       color: var(--muted);
-      white-space: nowrap;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
     }
-    .arch-arrow-both .arch-arrow-line::before {
-      content: "";
-      position: absolute;
-      left: -1px; top: -4px;
-      width: 0; height: 0;
-      border-top: 5px solid transparent;
-      border-bottom: 5px solid transparent;
-      border-right: 8px solid #94a3b8;
+    .arch-volumes strong { color: var(--text); }
+    .vol-badge {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: .15rem .5rem;
+      font-family: "Courier New", monospace;
+      font-size: .73rem;
+      color: #475569;
     }
 
-    /* Component Detail Cards */
-    .comp-section { margin-top: 2rem; }
-    .comp-section-title {
-      font-size: .8rem;
+    /* ── COMPONENT DETAILS ── */
+    .comp-group { margin-bottom: 1.5rem; }
+    .comp-group-title {
+      font-size: .75rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: .08em;
-      margin-bottom: .75rem;
+      letter-spacing: .09em;
+      margin-bottom: .65rem;
       display: flex;
       align-items: center;
       gap: .5rem;
+      color: var(--muted);
     }
-    .comp-section-title::after {
-      content: "";
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
-    .comp-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: .75rem;
-      margin-bottom: 1rem;
-    }
+    .comp-group-title::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+    .comp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .65rem; }
     .comp-card {
-      background: #fff;
-      border-radius: 10px;
+      background: #f8fafc;
       border: 1px solid var(--border);
-      padding: 1rem;
-      font-size: .85rem;
+      border-radius: 8px;
+      padding: .85rem;
     }
     .comp-card-head {
       display: flex;
       align-items: center;
-      gap: .5rem;
+      gap: .45rem;
       font-weight: 700;
-      margin-bottom: .5rem;
-      font-size: .9rem;
+      font-size: .85rem;
+      margin-bottom: .4rem;
     }
-    .comp-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
+    .comp-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
     .dot-source  { background: #16a34a; }
     .dot-airflow { background: #2563eb; }
     .dot-queue   { background: #dc2626; }
     .dot-meta    { background: #475569; }
     .dot-dest    { background: #7c3aed; }
     .dot-vol     { background: #0284c7; }
-    .comp-card p { color: var(--muted); line-height: 1.55; font-size: .83rem; }
-    .comp-card .tag {
+    .comp-card p { font-size: .8rem; color: var(--muted); line-height: 1.55; margin: 0 0 .4rem; }
+    .tag {
       display: inline-block;
-      background: #f1f5f9;
-      border: 1px solid var(--border);
+      background: #e2e8f0;
       border-radius: 4px;
-      padding: .1rem .45rem;
+      padding: .1rem .4rem;
       font-family: "Courier New", monospace;
-      font-size: .75rem;
+      font-size: .7rem;
       color: #475569;
-      margin: .25rem .2rem 0 0;
+      margin: .15rem .15rem 0 0;
     }
 
-    /* Volumes bar */
-    .arch-volumes {
-      margin-top: 1.25rem;
-      background: #e2e8f0;
-      border-radius: 8px;
-      padding: .6rem 1rem;
+    /* ── TABLES ── */
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    th { background: var(--primary); color: #fff; text-align: left; padding: .55rem .85rem; }
+    td { padding: .55rem .85rem; border-bottom: 1px solid var(--border); }
+    tr:nth-child(even) td { background: #f8fafc; }
+    tr:last-child td { border-bottom: none; }
+
+    /* ── BADGES ── */
+    .badge { display: inline-block; padding: .12rem .5rem; border-radius: 999px; font-size: .75rem; font-weight: 600; }
+    .badge-blue   { background: #dbeafe; color: #1d4ed8; }
+    .badge-green  { background: #dcfce7; color: #15803d; }
+    .badge-orange { background: #ffedd5; color: #c2410c; }
+
+    /* divider between sections */
+    .section + .section { border-top: 1px dashed var(--border); padding-top: 2.75rem; }
+
+    /* ── FOOTER ── */
+    .report-footer {
+      background: #f8fafc;
+      border-top: 1px solid var(--border);
+      padding: 1rem 3rem;
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: .75rem;
-      font-size: .8rem;
+      font-size: .78rem;
       color: var(--muted);
-      flex-wrap: wrap;
-    }
-    .arch-volumes strong { color: var(--text); }
-    .vol-badge {
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: .2rem .6rem;
-      font-family: "Courier New", monospace;
-      font-size: .76rem;
-      color: #475569;
     }
 
     footer {
       text-align: center;
-      padding: 2rem 1rem;
+      padding: 1.5rem 1rem;
       color: var(--muted);
-      font-size: .85rem;
-      border-top: 1px solid var(--border);
-      margin-top: 2rem;
+      font-size: .82rem;
     }
   </style>
 </head>
@@ -339,344 +405,370 @@
   <a href="pipelines.html">Pipelines</a>
 </nav>
 
-<div class="container">
+<div class="layout">
 
-  <div class="hero">
-    <h1>Seamless Data Pipeline</h1>
-    <p>Apache Airflow ETL Platform — SQL Server &amp; PostgreSQL to MSSQL / BigQuery</p>
-  </div>
-
-  <!-- Quick links -->
-  <div class="grid">
-    <div class="card">
-      <div class="card-icon">🚀</div>
-      <h3>Build &amp; Setup</h3>
-      <p>วิธีติดตั้ง Docker, ตั้งค่า environment และรัน Airflow ด้วย Docker Compose</p>
-      <a href="build.html" class="btn">ดูวิธี Build</a>
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="sidebar-box">
+      <h4>สารบัญ</h4>
+      <ol>
+        <li><a href="#overview">ภาพรวมโครงการ</a></li>
+        <li><a href="#architecture">System Architecture</a></li>
+        <li><a href="#components">Component Details</a></li>
+        <li><a href="#techstack">Tech Stack</a></li>
+        <li><a href="#dags">DAG Summary</a></li>
+      </ol>
+      <div class="sidebar-links">
+        <a href="build.html">🚀 Build &amp; Setup</a>
+        <a href="pipelines.html">🔄 Pipelines</a>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-icon">🔄</div>
-      <h3>Pipelines</h3>
-      <p>รายละเอียด DAG ทั้ง 4: Finance Invoice, Staging Student, Student Information, Printer Solution</p>
-      <a href="pipelines.html" class="btn">ดู Pipelines</a>
+  </aside>
+
+  <!-- ── REPORT ── -->
+  <article class="report">
+
+    <!-- Cover -->
+    <div class="report-cover">
+      <div class="doc-label">Technical Documentation</div>
+      <h1>Seamless Data Pipeline</h1>
+      <div class="subtitle">Apache Airflow ETL Platform — SQL Server &amp; PostgreSQL to MSSQL / BigQuery</div>
+      <div class="report-meta">
+        <span><strong>Platform</strong>Apache Airflow 3.1.8</span>
+        <span><strong>Executor</strong>CeleryExecutor</span>
+        <span><strong>Environment</strong>Docker Compose</span>
+        <span><strong>Updated</strong>June 2026</span>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-icon">🌐</div>
-      <h3>Airflow UI</h3>
-      <p>เข้า Airflow Web UI ที่ <strong>http://localhost:8080</strong><br/>username: <code>airflow</code> / password: <code>airflow</code></p>
+
+    <!-- Body -->
+    <div class="report-body">
+
+      <!-- ── 1. OVERVIEW ── -->
+      <div class="section" id="overview">
+        <div class="section-heading">
+          <div class="section-num">1</div>
+          <h2>ภาพรวมโครงการ</h2>
+        </div>
+        <p>
+          Seamless Data Pipeline เป็นระบบ ETL (Extract, Transform, Load) ที่พัฒนาบน <strong>Apache Airflow 3.1.8</strong>
+          ทำงานภายใน Docker Compose stack มีหน้าที่รวบรวมข้อมูลจากฐานข้อมูลหลายแหล่งของมหาวิทยาลัย
+          แปลงให้อยู่ในรูปแบบมาตรฐาน แล้วโหลดเข้าปลายทางสำหรับการวิเคราะห์และรายงาน
+        </p>
+        <p>
+          ระบบประกอบด้วย <strong>4 DAG (Directed Acyclic Graph)</strong> แต่ละ DAG ครอบคลุมข้อมูลคนละด้าน
+          ตั้งแต่ Finance Invoice, ข้อมูลนักศึกษา ไปจนถึงการใช้เครื่องพิมพ์ โดยทุก pipeline
+          ใช้ <strong>Parquet file</strong> เป็น intermediate format ในการส่งข้อมูลระหว่าง task
+          และส่ง <strong>email สรุปผล</strong> ทุกครั้งที่รันเสร็จ
+        </p>
+
+        <div class="quick-grid">
+          <div class="quick-card">
+            <div class="icon">🚀</div>
+            <h3>Build &amp; Setup</h3>
+            <p>วิธีติดตั้ง Docker, ตั้งค่า .env และรัน Airflow ด้วย Docker Compose</p>
+            <a href="build.html" class="btn">ดูวิธี Build</a>
+          </div>
+          <div class="quick-card">
+            <div class="icon">🔄</div>
+            <h3>Pipelines</h3>
+            <p>รายละเอียด DAG ทั้ง 4 พร้อม task flow และ source files</p>
+            <a href="pipelines.html" class="btn">ดู Pipelines</a>
+          </div>
+          <div class="quick-card">
+            <div class="icon">🌐</div>
+            <h3>Airflow UI</h3>
+            <p><strong>http://localhost:8080</strong><br/>user: <code>airflow</code> / pass: <code>airflow</code></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 2. ARCHITECTURE ── -->
+      <div class="section" id="architecture">
+        <div class="section-heading">
+          <div class="section-num">2</div>
+          <h2>System Architecture</h2>
+        </div>
+        <p>
+          ระบบแบ่งออกเป็น 3 ชั้น ได้แก่ <strong>Data Sources</strong> (แหล่งข้อมูลต้นทาง),
+          <strong>Docker Compose Stack</strong> (Airflow services ทั้งหมด) และ <strong>Destinations</strong>
+          (ปลายทางสำหรับ analytics) โดย Scheduler ทำหน้าที่ตัดสินใจว่า task ใดต้องรัน
+          แล้วส่งผ่าน Redis queue ให้ Celery Worker execute จริง
+        </p>
+
+        <div class="arch-diagram">
+          <div class="arch-cols">
+
+            <!-- COL 1: Sources -->
+            <div class="arch-col">
+              <span class="arch-col-label label-source">Data Sources</span>
+              <div class="arch-node node-source">
+                🗄️ MSSQL Server
+                <small>(SKY)</small>
+              </div>
+              <div class="arch-node node-source">
+                🐘 PostgreSQL
+                <small>(PaperCut)</small>
+              </div>
+            </div>
+
+            <!-- Arrow → -->
+            <div class="arch-arrow-col">
+              <div class="arrow-wrap">
+                <div class="arrow-line"></div>
+                <div class="arrow-label">Extract</div>
+              </div>
+              <div class="arrow-wrap">
+                <div class="arrow-line"></div>
+                <div class="arrow-label">Extract</div>
+              </div>
+            </div>
+
+            <!-- COL 2: Airflow -->
+            <div class="arch-col">
+              <span class="arch-col-label label-core">Docker Compose Stack</span>
+              <div class="arch-center-outer">
+                <div class="arch-center-label">✈️ Apache Airflow 3.1.8</div>
+                <div class="arch-node node-airflow">API Server<small>:8080 Web UI</small></div>
+                <div class="arch-node node-airflow">Scheduler &amp; DAG Processor<small>parse &amp; schedule DAGs</small></div>
+                <div class="arch-node node-airflow">Celery Worker<small>execute tasks</small></div>
+                <div class="arch-node node-airflow">Triggerer<small>async sensors</small></div>
+              </div>
+              <div class="arch-node node-queue">🔴 Redis :6379<small>Celery Broker</small></div>
+              <div class="arch-node node-meta">🗃️ PostgreSQL :5432<small>Airflow Metadata DB</small></div>
+            </div>
+
+            <!-- Arrow → -->
+            <div class="arch-arrow-col">
+              <div class="arrow-wrap">
+                <div class="arrow-line"></div>
+                <div class="arrow-label">Load</div>
+              </div>
+              <div class="arrow-wrap">
+                <div class="arrow-line"></div>
+                <div class="arrow-label">Load</div>
+              </div>
+            </div>
+
+            <!-- COL 3: Destinations -->
+            <div class="arch-col">
+              <span class="arch-col-label label-dest">Destinations</span>
+              <div class="arch-node node-dest-sql">
+                🗄️ MSSQL Target
+                <small>MERGE (Upsert)<br/>Finance Invoice, Staging Student</small>
+              </div>
+              <div class="arch-node node-dest-bq">
+                ☁️ Google BigQuery
+                <small>Upsert / Insert-only<br/>Student Info, Printer Usage</small>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="arch-volumes">
+            <strong>📁 Shared Volumes:</strong>
+            <span class="vol-badge">./dags</span>
+            <span class="vol-badge">./logs</span>
+            <span class="vol-badge">./config</span>
+            <span class="vol-badge">./plugins</span>
+            <span style="margin-left:auto;font-size:.72rem;">— mounted เข้าทุก Airflow container</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 3. COMPONENT DETAILS ── -->
+      <div class="section" id="components">
+        <div class="section-heading">
+          <div class="section-num">3</div>
+          <h2>Component Details</h2>
+        </div>
+        <p>อธิบายบทบาทของแต่ละ component ใน stack รายละเอียดการเชื่อมต่อ และผลกระทบต่อ pipeline</p>
+
+        <!-- Data Sources -->
+        <div class="comp-group">
+          <div class="comp-group-title" style="color:#15803d;">Data Sources</div>
+          <div class="comp-grid">
+            <div class="comp-card">
+              <div class="comp-card-head"><span class="comp-dot dot-source"></span>🗄️ MSSQL Server (SKY)</div>
+              <p>ฐานข้อมูลหลัก (Primary DB) ของมหาวิทยาลัย เก็บข้อมูล Finance Invoice และนักศึกษาทั้งหมด เชื่อมต่อผ่าน <strong>pymssql</strong> + SQLAlchemy</p>
+              <span class="tag">mssql_student_info</span>
+              <span class="tag">port 1433</span>
+            </div>
+            <div class="comp-card">
+              <div class="comp-card-head"><span class="comp-dot dot-source"></span>🐘 PostgreSQL (PaperCut)</div>
+              <p>ฐานข้อมูลระบบพิมพ์เอกสาร PaperCut เก็บ log การใช้เครื่องพิมพ์รายวัน Airflow ดึงข้อมูลมา aggregate เป็นรายเดือน</p>
+              <span class="tag">postgresql_printer_solution</span>
+              <span class="tag">port 5432</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Airflow Services -->
+        <div class="comp-group">
+          <div class="comp-group-title" style="color:#1d4ed8;">Airflow Services</div>
+          <div class="comp-grid">
+            <div class="comp-card">
+              <div class="comp-card-head"><span class="comp-dot dot-airflow"></span>API Server</div>
+              <p>ให้บริการ <strong>Web UI</strong> ที่ <code>:8080</code> และ REST API สำหรับ trigger DAG, ดู logs, จัดการ Connections และ Variables</p>
+              <span class="tag">localhost:8080</span>
+            </div>
+            <div class="comp-card">
+              <div class="comp-card-head"><span class="comp-dot dot-airflow"></span>Scheduler</div>
+              <p>ตรวจ schedule ของทุก DAG อย่างต่อเนื่อง เมื่อถึงเวลาจะสร้าง DAG Run และส่ง task เข้า Redis queue เพื่อให้ Worker รับไปทำงาน</p>
+              <span class="tag">health :8974</span>
+            </div>
+            <div class="comp-card">
+              <div class="comp-card-head"><span class="comp-dot dot-airflow"></span>DAG Processor</div>
+              <p>parse ไฟล์ Python ใน <code>./dags</code> แยก process จาก Scheduler (Airflow 3.x) ทำให้ parse error ใน DAG ไม่กระทบ Scheduler หลัก</p>
+              <span class="tag">airflow 3.x</span>
+            </div>
+            <div class="comp-card">
+              <div class="comp-card-head"><span class="comp-dot dot-airflow"></span>Celery Worker</div>
+              <p>รับ task จาก Redis queue แล้ว <strong>execute จริง</strong> ทุก task (extract, transform, validate, load, notify) รันที่นี่ สามารถ scale เป็นหลาย worker ได้</p>
+              <span class="tag">CeleryExecutor</span>
+            </div>
+            <div class="comp-card">
+              <div class="comp-card-head"><span class="comp-dot dot-airflow"></span>Triggerer</div>
+              <p>จัดการ <strong>deferred tasks</strong> และ async sensors แบบ event-driven ช่วยลด thread ที่ต้องรอ I/O ให้ Worker ไม่ถูก block</p>
+              <span class="tag">async</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Infrastructure -->
+        <div class="comp-group">
+          <div class="comp-group-title" style="color:#475569;">Infrastructure</div>
+          <div class="comp-grid">
+            <div class="comp-card">
+              <div class="comp-card-head"><span class="comp-dot dot-queue"></span>🔴 Redis (Message Broker)</div>
+              <p>รับ task จาก Scheduler แล้วกระจายไปยัง Celery Worker เป็น <strong>in-memory queue</strong> ทำให้ส่ง task เร็วและรองรับ Worker หลายตัวพร้อมกัน</p>
+              <span class="tag">port 6379</span>
+              <span class="tag">redis:7.2</span>
+            </div>
+            <div class="comp-card">
+              <div class="comp-card-head"><span class="comp-dot dot-meta"></span>🗃️ PostgreSQL (Metadata DB)</div>
+              <p>เก็บข้อมูลภายในของ Airflow ทั้งหมด — DAG runs, task instances, XCom (ค่าส่งระหว่าง task), Connections, Variables และ User accounts</p>
+              <span class="tag">port 5432</span>
+              <span class="tag">postgres:16</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Destinations -->
+        <div class="comp-group">
+          <div class="comp-group-title" style="color:#6d28d9;">Destinations</div>
+          <div class="comp-grid">
+            <div class="comp-card">
+              <div class="comp-card-head"><span class="comp-dot dot-dest"></span>🗄️ MSSQL Target (data_op)</div>
+              <p>ปลายทางสำหรับ 2 pipelines ใช้ <strong>MERGE (Upsert) แบบ batch</strong> — อัปโหลดเข้า temp table ก่อน แล้ว MERGE เข้า target ทีละ 1,000 rows พร้อม audit log</p>
+              <span class="tag">Finance Invoice</span>
+              <span class="tag">Staging Student</span>
+              <span class="tag">batch 1,000</span>
+            </div>
+            <div class="comp-card">
+              <div class="comp-card-head"><span class="comp-dot dot-dest"></span>☁️ Google BigQuery</div>
+              <p>ปลายทาง cloud สำหรับ 2 pipelines — <strong>Student Info</strong> ใช้ MERGE upsert ด้วย key <code>student_id</code> / <strong>Printer</strong> ใช้ insert-only dedup ด้วย composite key 9 columns</p>
+              <span class="tag">Education dataset</span>
+              <span class="tag">PaperCut dataset</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shared Volumes -->
+        <div class="comp-group">
+          <div class="comp-group-title" style="color:#0284c7;">Shared Volumes</div>
+          <div class="comp-grid">
+            <div class="comp-card">
+              <div class="comp-card-head"><span class="comp-dot dot-vol"></span><code>./dags</code></div>
+              <p>DAG Python files และ <code>src/</code> modules ทั้งหมด Worker ทุกตัวต้องอ่านไฟล์เดียวกัน แก้ไขไฟล์มีผลทันทีโดยไม่ต้อง rebuild image</p>
+            </div>
+            <div class="comp-card">
+              <div class="comp-card-head"><span class="comp-dot dot-vol"></span><code>./logs</code></div>
+              <p>Task execution logs ทุก run Airflow UI อ่านจาก volume นี้เพื่อแสดงใน Log tab ของแต่ละ task instance</p>
+            </div>
+            <div class="comp-card">
+              <div class="comp-card-head"><span class="comp-dot dot-vol"></span><code>./config</code></div>
+              <p>ไฟล์ <code>airflow.cfg</code> สำหรับ override ค่า config และโฟลเดอร์ <code>secrets/</code> สำหรับ GCP Service Account JSON key</p>
+            </div>
+            <div class="comp-card">
+              <div class="comp-card-head"><span class="comp-dot dot-vol"></span><code>./plugins</code></div>
+              <p>Custom Airflow plugins เช่น Operator หรือ Hook ที่พัฒนาเพิ่มเติม โหลดอัตโนมัติเมื่อ Airflow เริ่มต้น</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 4. TECH STACK ── -->
+      <div class="section" id="techstack">
+        <div class="section-heading">
+          <div class="section-num">4</div>
+          <h2>Tech Stack</h2>
+        </div>
+        <p>รายการ technology และ library ที่ใช้ในระบบทั้งหมด</p>
+        <table>
+          <thead><tr><th>Component</th><th>Technology</th><th>Version / Note</th></tr></thead>
+          <tbody>
+            <tr><td>Orchestrator</td><td>Apache Airflow</td><td><span class="badge badge-blue">3.1.8</span> CeleryExecutor</td></tr>
+            <tr><td>Task Queue</td><td>Redis</td><td><span class="badge badge-blue">7.2</span> Celery Broker</td></tr>
+            <tr><td>Metadata DB</td><td>PostgreSQL</td><td><span class="badge badge-blue">16</span></td></tr>
+            <tr><td>Language</td><td>Python</td><td>3.x (ใน Airflow image)</td></tr>
+            <tr><td>Data Processing</td><td>Pandas + PyArrow</td><td>Parquet as intermediate format</td></tr>
+            <tr><td>Source DB 1</td><td>Microsoft SQL Server (SKY)</td><td>pymssql / SQLAlchemy — Finance Invoice &amp; Student</td></tr>
+            <tr><td>Source DB 2</td><td>PostgreSQL (PaperCut)</td><td>SQLAlchemy</td></tr>
+            <tr><td>Target 1</td><td>MS SQL Server</td><td>MERGE (upsert) with batching</td></tr>
+            <tr><td>Target 2</td><td>Google BigQuery</td><td>google-cloud-bigquery</td></tr>
+            <tr><td>Notification</td><td>SMTP Email</td><td>Gmail SMTP SSL :465</td></tr>
+            <tr><td>Container</td><td>Docker Compose</td><td>Local dev environment</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ── 5. DAG SUMMARY ── -->
+      <div class="section" id="dags">
+        <div class="section-heading">
+          <div class="section-num">5</div>
+          <h2>DAG Summary</h2>
+        </div>
+        <p>ตารางสรุป DAG ทั้ง 4 รายการ พร้อม source, destination และ schedule</p>
+        <table>
+          <thead><tr><th>DAG ID</th><th>Source</th><th>Destination</th><th>Schedule</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>finance_invoice_pipeline</strong></td>
+              <td>MSSQL (SKY)</td>
+              <td>MSSQL (data_op)</td>
+              <td><span class="badge badge-orange">ทุกวันศุกร์ 15:00</span></td>
+            </tr>
+            <tr>
+              <td><strong>staging_student_pipeline</strong></td>
+              <td>MSSQL (SKY)</td>
+              <td>MSSQL (data_op)</td>
+              <td><span class="badge badge-orange">ทุกวันศุกร์ 15:00</span></td>
+            </tr>
+            <tr>
+              <td><strong>student_information_pipeline</strong></td>
+              <td>MSSQL (SKY)</td>
+              <td>BigQuery (Education)</td>
+              <td><span class="badge badge-green">ทุกวัน 05:00</span></td>
+            </tr>
+            <tr>
+              <td><strong>printer_solution_pipeline</strong></td>
+              <td>PostgreSQL (PaperCut)</td>
+              <td>BigQuery (PaperCut)</td>
+              <td><span class="badge badge-green">ทุกวัน (daily)</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- /report-body -->
+
+    <div class="report-footer">
+      <span>Seamless Data Pipeline — Technical Documentation</span>
+      <span>Apache Airflow 3.1.8 &nbsp;·&nbsp; June 2026</span>
     </div>
-  </div>
 
-  <!-- Architecture -->
-  <div class="section">
-    <h2>System Architecture</h2>
-    <div class="arch-diagram">
-      <div class="arch-cols">
-
-        <!-- COL 1: Sources -->
-        <div class="arch-col">
-          <span class="arch-col-label label-source">Data Sources</span>
-          <div class="arch-node node-source">
-            🗄️ MSSQL Server
-            <small>(DGSI)</small>
-          </div>
-          <div class="arch-node node-source">
-            🐘 PostgreSQL
-            <small>(PaperCut)</small>
-          </div>
-        </div>
-
-        <!-- Arrow: Sources → Airflow -->
-        <div class="arch-arrow">
-          <div style="display:flex;flex-direction:column;gap:.6rem;">
-            <div>
-              <div class="arch-arrow-line"></div>
-              <div class="arch-arrow-label">Extract</div>
-            </div>
-            <div>
-              <div class="arch-arrow-line"></div>
-              <div class="arch-arrow-label">Extract</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- COL 2: Airflow Core (Docker Compose) -->
-        <div class="arch-col">
-          <span class="arch-col-label label-core">Docker Compose Stack</span>
-          <div class="arch-center-outer">
-            <div class="arch-center-label">✈️ Apache Airflow 3.1.8</div>
-            <div class="arch-node node-airflow">
-              API Server
-              <small>:8080 (Web UI)</small>
-            </div>
-            <div class="arch-node node-airflow">
-              Scheduler &amp; DAG Processor
-              <small>parse &amp; schedule DAGs</small>
-            </div>
-            <div class="arch-node node-airflow">
-              Celery Worker
-              <small>execute tasks</small>
-            </div>
-            <div class="arch-node node-airflow">
-              Triggerer
-              <small>async sensors</small>
-            </div>
-          </div>
-          <div class="arch-node node-queue">
-            🔴 Redis :6379
-            <small>Celery Broker</small>
-          </div>
-          <div class="arch-node node-meta">
-            🗃️ PostgreSQL :5432
-            <small>Airflow Metadata DB</small>
-          </div>
-        </div>
-
-        <!-- Arrow: Airflow → Destinations -->
-        <div class="arch-arrow">
-          <div style="display:flex;flex-direction:column;gap:.6rem;">
-            <div>
-              <div class="arch-arrow-line"></div>
-              <div class="arch-arrow-label">Load</div>
-            </div>
-            <div>
-              <div class="arch-arrow-line"></div>
-              <div class="arch-arrow-label">Load</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- COL 3: Destinations -->
-        <div class="arch-col">
-          <span class="arch-col-label label-dest">Destinations</span>
-          <div class="arch-node node-dest-sql">
-            🗄️ MSSQL Target
-            <small>MERGE (Upsert)<br/>Finance Invoice, Staging Student</small>
-          </div>
-          <div class="arch-node node-dest-bq">
-            ☁️ Google BigQuery
-            <small>Upsert / Insert-only<br/>Student Info, Printer Usage</small>
-          </div>
-        </div>
-
-      </div><!-- end arch-cols -->
-
-      <!-- Shared Volumes -->
-      <div class="arch-volumes">
-        <strong>📁 Shared Volumes:</strong>
-        <span class="vol-badge">./dags</span>
-        <span class="vol-badge">./logs</span>
-        <span class="vol-badge">./config</span>
-        <span class="vol-badge">./plugins</span>
-        <span style="margin-left:auto;font-size:.75rem;">— mounted เข้าทุก Airflow container</span>
-      </div>
-
-      <!-- ── Component Details ── -->
-
-      <!-- Data Sources -->
-      <div class="comp-section">
-        <div class="comp-section-title" style="color:#15803d;">Data Sources</div>
-        <div class="comp-grid">
-          <div class="comp-card">
-            <div class="comp-card-head">
-              <span class="comp-dot dot-source"></span>
-              🗄️ MSSQL Server (DGSI)
-            </div>
-            <p>ฐานข้อมูลหลักของมหาวิทยาลัย เก็บข้อมูล Finance Invoice และนักศึกษา เชื่อมต่อผ่าน <strong>pymssql</strong> + SQLAlchemy ใช้ Airflow Connection ID</p>
-            <span class="tag">mssql_student_info</span>
-            <span class="tag">port 1433</span>
-          </div>
-          <div class="comp-card">
-            <div class="comp-card-head">
-              <span class="comp-dot dot-source"></span>
-              🐘 PostgreSQL (PaperCut)
-            </div>
-            <p>ฐานข้อมูลระบบพิมพ์เอกสาร PaperCut เก็บ log การใช้เครื่องพิมพ์รายวัน Airflow ดึงข้อมูลมา aggregate เป็นรายเดือน</p>
-            <span class="tag">postgresql_printer_solution</span>
-            <span class="tag">port 5432</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Airflow Services -->
-      <div class="comp-section">
-        <div class="comp-section-title" style="color:#1d4ed8;">Airflow Services (Docker Compose)</div>
-        <div class="comp-grid">
-          <div class="comp-card">
-            <div class="comp-card-head">
-              <span class="comp-dot dot-airflow"></span>
-              API Server
-            </div>
-            <p>ให้บริการ <strong>Web UI</strong> ที่ <code>:8080</code> และ REST API สำหรับ trigger DAG, ดู task logs, จัดการ Connections และ Variables ทั้งหมด</p>
-            <span class="tag">localhost:8080</span>
-          </div>
-          <div class="comp-card">
-            <div class="comp-card-head">
-              <span class="comp-dot dot-airflow"></span>
-              Scheduler
-            </div>
-            <p>ตรวจ schedule ของทุก DAG อย่างต่อเนื่อง เมื่อถึงเวลาจะสร้าง DAG Run และส่ง task เข้า Redis queue เพื่อให้ Worker รับไปทำงาน</p>
-            <span class="tag">health :8974</span>
-          </div>
-          <div class="comp-card">
-            <div class="comp-card-head">
-              <span class="comp-dot dot-airflow"></span>
-              DAG Processor
-            </div>
-            <p>parse ไฟล์ Python ใน <code>./dags</code> แยก process จาก Scheduler (Airflow 3.x) ช่วยให้ parse error ใน DAG ไม่กระทบ Scheduler หลัก</p>
-            <span class="tag">airflow 3.x</span>
-          </div>
-          <div class="comp-card">
-            <div class="comp-card-head">
-              <span class="comp-dot dot-airflow"></span>
-              Celery Worker
-            </div>
-            <p>รับ task จาก Redis queue แล้ว <strong>execute จริง</strong> — ทุก task ใน pipeline (extract, transform, validate, load, notify) รันที่นี่ สามารถ scale เป็นหลาย worker ได้</p>
-            <span class="tag">CeleryExecutor</span>
-          </div>
-          <div class="comp-card">
-            <div class="comp-card-head">
-              <span class="comp-dot dot-airflow"></span>
-              Triggerer
-            </div>
-            <p>จัดการ <strong>deferred tasks</strong> และ async sensors แบบ event-driven ช่วยลด thread ที่ต้องรอ I/O ให้ Worker ไม่ถูก block</p>
-            <span class="tag">async</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Infrastructure -->
-      <div class="comp-section">
-        <div class="comp-section-title" style="color:#475569;">Infrastructure</div>
-        <div class="comp-grid">
-          <div class="comp-card">
-            <div class="comp-card-head">
-              <span class="comp-dot dot-queue"></span>
-              🔴 Redis (Message Broker)
-            </div>
-            <p>รับ task จาก Scheduler แล้วกระจายไปยัง Celery Worker เป็น <strong>in-memory queue</strong> ทำให้ส่ง task เร็วและรองรับ Worker หลายตัวพร้อมกัน</p>
-            <span class="tag">port 6379</span>
-            <span class="tag">redis:7.2</span>
-          </div>
-          <div class="comp-card">
-            <div class="comp-card-head">
-              <span class="comp-dot dot-meta"></span>
-              🗃️ PostgreSQL (Metadata DB)
-            </div>
-            <p>เก็บข้อมูลภายในของ Airflow ทั้งหมด — DAG runs, task instances, XCom (ค่าส่งระหว่าง task), Connections, Variables และ User accounts</p>
-            <span class="tag">port 5432</span>
-            <span class="tag">postgres:16</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Destinations -->
-      <div class="comp-section">
-        <div class="comp-section-title" style="color:#6d28d9;">Destinations</div>
-        <div class="comp-grid">
-          <div class="comp-card">
-            <div class="comp-card-head">
-              <span class="comp-dot dot-dest"></span>
-              🗄️ MSSQL Target (data_op)
-            </div>
-            <p>ปลายทางสำหรับ 2 pipelines ใช้วิธี <strong>MERGE (Upsert)</strong> แบบ batch — อัปโหลดข้อมูลเข้า temp table ก่อน แล้ว MERGE เข้า target ทีละ 1,000 rows พร้อม audit log</p>
-            <span class="tag">Finance Invoice</span>
-            <span class="tag">Staging Student</span>
-            <span class="tag">batch 1,000</span>
-          </div>
-          <div class="comp-card">
-            <div class="comp-card-head">
-              <span class="comp-dot dot-dest"></span>
-              ☁️ Google BigQuery
-            </div>
-            <p>ปลายทาง cloud สำหรับ 2 pipelines — <strong>Student Info</strong> ใช้ MERGE upsert ด้วย key <code>student_id</code> / <strong>Printer</strong> ใช้ insert-only dedup ด้วย composite key 9 columns</p>
-            <span class="tag">Student Info → Education dataset</span>
-            <span class="tag">Printer → PaperCut dataset</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Shared Volumes detail -->
-      <div class="comp-section">
-        <div class="comp-section-title" style="color:#0284c7;">Shared Volumes</div>
-        <div class="comp-grid">
-          <div class="comp-card">
-            <div class="comp-card-head"><span class="comp-dot dot-vol"></span><code>./dags</code></div>
-            <p>DAG Python files และ <code>src/</code> modules ทั้งหมด — Worker ทุกตัวต้องอ่านไฟล์เดียวกัน การแก้ไขไฟล์มีผลทันทีโดยไม่ต้อง rebuild image</p>
-          </div>
-          <div class="comp-card">
-            <div class="comp-card-head"><span class="comp-dot dot-vol"></span><code>./logs</code></div>
-            <p>Task execution logs ทุก run — Airflow UI อ่านจาก volume นี้เพื่อแสดงใน Log tab ของแต่ละ task instance</p>
-          </div>
-          <div class="comp-card">
-            <div class="comp-card-head"><span class="comp-dot dot-vol"></span><code>./config</code></div>
-            <p>ไฟล์ <code>airflow.cfg</code> สำหรับ override ค่า config และ <code>secrets/</code> สำหรับ GCP Service Account JSON key</p>
-          </div>
-          <div class="comp-card">
-            <div class="comp-card-head"><span class="comp-dot dot-vol"></span><code>./plugins</code></div>
-            <p>Custom Airflow plugins เช่น Operator หรือ Hook ที่พัฒนาเพิ่มเติม — โหลดอัตโนมัติเมื่อ Airflow เริ่มต้น</p>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- Tech Stack -->
-  <div class="section">
-    <h2>Tech Stack</h2>
-    <table>
-      <thead><tr><th>Component</th><th>Technology</th><th>Version / Note</th></tr></thead>
-      <tbody>
-        <tr><td>Orchestrator</td><td>Apache Airflow</td><td><span class="badge badge-blue">3.1.8</span> CeleryExecutor</td></tr>
-        <tr><td>Task Queue</td><td>Redis</td><td><span class="badge badge-blue">7.2</span> Celery Broker</td></tr>
-        <tr><td>Metadata DB</td><td>PostgreSQL</td><td><span class="badge badge-blue">16</span></td></tr>
-        <tr><td>Language</td><td>Python</td><td>3.x (ใน Airflow image)</td></tr>
-        <tr><td>Data Processing</td><td>Pandas + PyArrow</td><td>Parquet as intermediate format</td></tr>
-        <tr><td>Source DB 1</td><td>Microsoft SQL Server</td><td>pymssql / pyodbc</td></tr>
-        <tr><td>Source DB 2</td><td>PostgreSQL (PaperCut)</td><td>SQLAlchemy</td></tr>
-        <tr><td>Target 1</td><td>MS SQL Server</td><td>MERGE (upsert) with batching</td></tr>
-        <tr><td>Target 2</td><td>Google BigQuery</td><td>google-cloud-bigquery</td></tr>
-        <tr><td>Notification</td><td>SMTP Email</td><td>Gmail SMTP SSL :465</td></tr>
-        <tr><td>Container</td><td>Docker Compose</td><td>Local dev environment</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- DAG Summary -->
-  <div class="section">
-    <h2>DAG Summary</h2>
-    <table>
-      <thead><tr><th>DAG ID</th><th>Source</th><th>Destination</th><th>Schedule</th></tr></thead>
-      <tbody>
-        <tr>
-          <td><strong>finance_invoice_pipeline</strong></td>
-          <td>MSSQL (DGSI)</td>
-          <td>MSSQL (data_op)</td>
-          <td><span class="badge badge-orange">ทุกวันศุกร์ 15:00</span></td>
-        </tr>
-        <tr>
-          <td><strong>staging_student_pipeline</strong></td>
-          <td>MSSQL (DGSI)</td>
-          <td>MSSQL (data_op)</td>
-          <td><span class="badge badge-orange">ทุกวันศุกร์ 15:00</span></td>
-        </tr>
-        <tr>
-          <td><strong>student_information_pipeline</strong></td>
-          <td>MSSQL (DGSI)</td>
-          <td>BigQuery (Education)</td>
-          <td><span class="badge badge-green">ทุกวัน 05:00</span></td>
-        </tr>
-        <tr>
-          <td><strong>printer_solution_pipeline</strong></td>
-          <td>PostgreSQL (PaperCut)</td>
-          <td>BigQuery (PaperCut)</td>
-          <td><span class="badge badge-green">ทุกวัน (daily)</span></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
+  </article>
 </div>
 
 <footer>Seamless Data Pipeline — Apache Airflow 3.1.8 &nbsp;|&nbsp; Last updated: June 2026</footer>

@@ -9,7 +9,7 @@
       --primary: #2563eb;
       --primary-dark: #1d4ed8;
       --accent: #0ea5e9;
-      --bg: #f8fafc;
+      --bg: #f1f5f9;
       --card: #ffffff;
       --border: #e2e8f0;
       --text: #1e293b;
@@ -21,131 +21,118 @@
       --code-text: #e2e8f0;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
     a { color: var(--primary); text-decoration: none; }
     a:hover { text-decoration: underline; }
 
+    /* NAV */
     nav {
       background: var(--primary);
       padding: 0 2rem;
-      display: flex;
-      align-items: center;
-      gap: 2rem;
-      height: 56px;
-      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; gap: 2rem;
+      height: 52px; position: sticky; top: 0; z-index: 100;
       box-shadow: 0 2px 8px rgba(0,0,0,.2);
     }
-    nav .brand { color: #fff; font-weight: 700; font-size: 1.1rem; white-space: nowrap; }
-    nav a { color: rgba(255,255,255,.85); font-size: .9rem; padding: 4px 10px; border-radius: 4px; }
-    nav a:hover, nav a.active { background: rgba(255,255,255,.15); color: #fff; text-decoration: none; }
+    nav .brand { color: #fff; font-weight: 700; font-size: 1rem; white-space: nowrap; }
+    nav a { color: rgba(255,255,255,.8); font-size: .88rem; padding: 3px 10px; border-radius: 4px; }
+    nav a:hover, nav a.active { background: rgba(255,255,255,.18); color: #fff; text-decoration: none; }
 
-    .layout { display: flex; max-width: 1100px; margin: 0 auto; padding: 2.5rem 1.5rem; gap: 2rem; }
+    /* LAYOUT */
+    .layout { display: flex; max-width: 1180px; margin: 2rem auto; padding: 0 1.5rem; gap: 1.75rem; align-items: flex-start; }
 
-    /* SIDEBAR TOC */
-    .toc {
-      width: 220px;
-      flex-shrink: 0;
-      position: sticky;
-      top: 76px;
-      align-self: flex-start;
-    }
-    .toc h4 { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: .75rem; }
-    .toc ol { list-style: none; padding: 0; }
-    .toc li { margin-bottom: .35rem; }
-    .toc a { font-size: .88rem; color: var(--muted); display: block; padding: .2rem .5rem; border-radius: 4px; }
-    .toc a:hover { background: var(--border); color: var(--text); text-decoration: none; }
+    /* SIDEBAR */
+    .sidebar { width: 210px; flex-shrink: 0; position: sticky; top: 68px; }
+    .sidebar-box { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.1rem 1rem; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    .sidebar-box h4 { font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: .75rem; }
+    .sidebar-box ol { list-style: none; padding: 0; counter-reset: toc; }
+    .sidebar-box li { counter-increment: toc; margin-bottom: .1rem; }
+    .sidebar-box li a { display: flex; align-items: baseline; gap: .4rem; font-size: .82rem; color: var(--muted); padding: .25rem .4rem; border-radius: 5px; line-height: 1.4; }
+    .sidebar-box li a::before { content: counter(toc) "."; font-size: .72rem; font-weight: 700; color: var(--primary); flex-shrink: 0; }
+    .sidebar-box li a:hover { background: #f1f5f9; color: var(--text); text-decoration: none; }
+    .sidebar-links { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: .4rem; }
+    .sidebar-links a { display: flex; align-items: center; gap: .45rem; font-size: .82rem; background: var(--primary); color: #fff; padding: .4rem .75rem; border-radius: 6px; font-weight: 600; }
+    .sidebar-links a:hover { background: var(--primary-dark); text-decoration: none; }
 
-    /* CONTENT */
-    .content { flex: 1; min-width: 0; }
-    .section { margin-bottom: 2.5rem; scroll-margin-top: 76px; }
-    .section h2 {
-      font-size: 1.3rem;
-      border-left: 4px solid var(--primary);
-      padding-left: .75rem;
-      margin-bottom: 1.25rem;
-      color: var(--primary-dark);
-    }
-    .section h3 { font-size: 1rem; font-weight: 700; margin: 1.25rem 0 .5rem; color: var(--text); }
-    p { margin-bottom: .85rem; font-size: .95rem; }
+    /* REPORT */
+    .report { flex: 1; min-width: 0; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.07); overflow: hidden; }
+
+    /* Cover */
+    .report-cover { background: linear-gradient(135deg, #065f46 0%, #059669 100%); padding: 3rem 3rem 2.5rem; color: #fff; }
+    .report-cover .doc-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; opacity: .75; margin-bottom: .75rem; }
+    .report-cover h1 { font-size: 1.9rem; font-weight: 800; line-height: 1.2; margin-bottom: .6rem; }
+    .report-cover .subtitle { font-size: 1rem; opacity: .88; margin-bottom: 1.75rem; }
+    .report-meta { display: flex; gap: 2rem; flex-wrap: wrap; font-size: .82rem; opacity: .85; border-top: 1px solid rgba(255,255,255,.25); padding-top: 1.25rem; }
+    .report-meta span strong { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; opacity: .75; margin-bottom: .1rem; }
+
+    /* Body */
+    .report-body { padding: 2.5rem 3rem; }
+
+    /* Section */
+    .section { margin-bottom: 2.75rem; scroll-margin-top: 68px; }
+    .section + .section { border-top: 1px dashed var(--border); padding-top: 2.75rem; }
+    .section-heading { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.25rem; padding-bottom: .65rem; border-bottom: 2px solid var(--border); }
+    .section-num { width: 2rem; height: 2rem; background: var(--primary); color: #fff; border-radius: 6px; font-size: .85rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .section-heading h2 { font-size: 1.2rem; color: var(--primary-dark); font-weight: 700; }
+
+    h3.sub { font-size: .95rem; font-weight: 700; color: var(--primary-dark); margin: 1.25rem 0 .6rem; border-left: 3px solid var(--primary); padding-left: .6rem; }
+    p { font-size: .93rem; margin-bottom: .85rem; }
 
     /* STEPS */
-    .steps { counter-reset: step; }
+    .steps { counter-reset: step; display: flex; flex-direction: column; gap: .85rem; }
     .step {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.25rem 1.25rem 1.25rem 4rem;
-      margin-bottom: 1rem;
+      background: #f8fafc; border: 1px solid var(--border); border-radius: 10px;
+      padding: 1.1rem 1.1rem 1.1rem 3.75rem;
       position: relative;
-      box-shadow: 0 1px 3px rgba(0,0,0,.05);
     }
     .step::before {
-      counter-increment: step;
-      content: counter(step);
-      position: absolute;
-      left: 1.25rem;
-      top: 1.1rem;
-      width: 2rem; height: 2rem;
-      background: var(--primary);
-      color: #fff;
-      border-radius: 50%;
-      font-weight: 700;
-      font-size: .9rem;
+      counter-increment: step; content: counter(step);
+      position: absolute; left: 1.1rem; top: 1rem;
+      width: 1.9rem; height: 1.9rem;
+      background: var(--primary); color: #fff; border-radius: 50%;
+      font-weight: 800; font-size: .85rem;
       display: flex; align-items: center; justify-content: center;
     }
-    .step h3 { margin-top: 0; font-size: 1rem; color: var(--primary-dark); }
+    .step h3 { margin-top: 0; font-size: .95rem; color: var(--primary-dark); margin-bottom: .4rem; }
 
     /* CODE */
-    pre {
-      background: var(--code-bg);
-      color: var(--code-text);
-      border-radius: 8px;
-      padding: 1rem 1.25rem;
-      font-family: "Courier New", Consolas, monospace;
-      font-size: .82rem;
-      overflow-x: auto;
-      line-height: 1.6;
-      margin: .75rem 0;
-    }
-    code {
-      background: #e2e8f0;
-      color: #c2410c;
-      padding: .1em .35em;
-      border-radius: 4px;
-      font-size: .88em;
-      font-family: "Courier New", Consolas, monospace;
-    }
+    pre { background: var(--code-bg); color: var(--code-text); border-radius: 8px; padding: 1rem 1.25rem; font-family: "Courier New", Consolas, monospace; font-size: .8rem; overflow-x: auto; line-height: 1.6; margin: .65rem 0; }
+    code { background: #e2e8f0; color: #c2410c; padding: .1em .35em; border-radius: 4px; font-size: .87em; font-family: "Courier New", Consolas, monospace; }
     pre code { background: transparent; color: inherit; padding: 0; }
 
     /* CALLOUT */
-    .callout {
-      border-radius: 8px;
-      padding: 1rem 1.25rem;
-      margin: 1rem 0;
-      font-size: .9rem;
-      border-left: 4px solid;
-      display: flex;
-      gap: .75rem;
-      align-items: flex-start;
-    }
-    .callout-icon { font-size: 1.15rem; flex-shrink: 0; margin-top: .05rem; }
+    .callout { border-radius: 8px; padding: .9rem 1.1rem; margin: .85rem 0; font-size: .88rem; border-left: 4px solid; display: flex; gap: .65rem; align-items: flex-start; }
+    .callout-icon { font-size: 1rem; flex-shrink: 0; margin-top: .1rem; }
     .callout.info   { background: #eff6ff; border-color: var(--primary); }
     .callout.warn   { background: #fffbeb; border-color: var(--warning); }
     .callout.danger { background: #fef2f2; border-color: var(--danger); }
     .callout.tip    { background: #f0fdf4; border-color: var(--success); }
 
-    /* ENV TABLE */
-    table { width: 100%; border-collapse: collapse; font-size: .88rem; margin: .75rem 0; }
-    th { background: var(--primary); color: #fff; text-align: left; padding: .55rem .9rem; }
-    td { padding: .55rem .9rem; border-bottom: 1px solid var(--border); vertical-align: top; }
-    tr:nth-child(even) td { background: #f1f5f9; }
-    td:first-child { font-family: "Courier New", monospace; font-size: .83rem; white-space: nowrap; }
+    /* TABLE */
+    table { width: 100%; border-collapse: collapse; font-size: .87rem; margin: .65rem 0 1rem; }
+    th { background: var(--primary); color: #fff; text-align: left; padding: .55rem .85rem; }
+    td { padding: .55rem .85rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #f8fafc; }
+    tr:last-child td { border-bottom: none; }
+    td:first-child { font-family: "Courier New", monospace; font-size: .82rem; }
 
-    .badge { display: inline-block; padding: .12rem .5rem; border-radius: 999px; font-size: .76rem; font-weight: 600; }
-    .badge-req  { background: #fee2e2; color: #b91c1c; }
-    .badge-opt  { background: #fef9c3; color: #92400e; }
+    /* BADGE */
+    .badge { display: inline-block; padding: .12rem .5rem; border-radius: 999px; font-size: .75rem; font-weight: 600; }
+    .badge-req { background: #fee2e2; color: #b91c1c; }
+    .badge-opt { background: #fef9c3; color: #92400e; }
+    .badge-blue { background: #dbeafe; color: #1d4ed8; }
 
-    footer { text-align: center; padding: 2rem 1rem; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--border); margin-top: 2rem; }
+    /* CONN CARD */
+    .conn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: .85rem; margin-bottom: 1rem; }
+    .conn-card { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .conn-card-head { background: #1e293b; color: #e2e8f0; padding: .55rem .85rem; font-size: .82rem; font-weight: 700; display: flex; align-items: center; gap: .5rem; }
+    .conn-card table { margin: 0; }
+    .conn-card td { padding: .4rem .85rem; font-size: .82rem; }
+    .conn-card td:first-child { color: var(--muted); font-family: inherit; white-space: nowrap; width: 110px; }
+
+    /* Report footer */
+    .report-footer { background: #f8fafc; border-top: 1px solid var(--border); padding: 1rem 3rem; display: flex; justify-content: space-between; align-items: center; font-size: .78rem; color: var(--muted); }
+
+    footer { text-align: center; padding: 1.5rem 1rem; color: var(--muted); font-size: .82rem; }
   </style>
 </head>
 <body>
@@ -159,80 +146,110 @@
 
 <div class="layout">
 
-  <!-- TOC sidebar -->
-  <aside class="toc">
-    <h4>สารบัญ</h4>
-    <ol>
-      <li><a href="#prerequisites">1. Prerequisites</a></li>
-      <li><a href="#clone">2. Clone / เตรียมโปรเจกต์</a></li>
-      <li><a href="#env">3. ตั้งค่า .env</a></li>
-      <li><a href="#connections">4. Airflow Connections</a></li>
-      <li><a href="#variables">5. Airflow Variables</a></li>
-      <li><a href="#start">6. รัน Docker Compose</a></li>
-      <li><a href="#verify">7. ตรวจสอบ Services</a></li>
-      <li><a href="#stop">8. หยุด / ลบ Container</a></li>
-      <li><a href="#tips">Tips &amp; Troubleshoot</a></li>
-    </ol>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-box">
+      <h4>สารบัญ</h4>
+      <ol>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#clone">Clone โปรเจกต์</a></li>
+        <li><a href="#env">ตั้งค่า .env</a></li>
+        <li><a href="#connections">Airflow Connections</a></li>
+        <li><a href="#variables">Airflow Variables</a></li>
+        <li><a href="#start">รัน Docker Compose</a></li>
+        <li><a href="#verify">ตรวจสอบ Services</a></li>
+        <li><a href="#stop">หยุด / Reset</a></li>
+        <li><a href="#tips">Tips &amp; Troubleshoot</a></li>
+      </ol>
+      <div class="sidebar-links">
+        <a href="index.html">📋 Overview</a>
+        <a href="pipelines.html">🔄 Pipelines</a>
+      </div>
+    </div>
   </aside>
 
-  <main class="content">
+  <!-- REPORT -->
+  <article class="report">
 
-    <!-- SECTION 1 -->
-    <div class="section" id="prerequisites">
-      <h2>1. Prerequisites</h2>
-      <p>ตรวจสอบให้ครบก่อนเริ่ม:</p>
-      <div class="steps">
-        <div class="step">
-          <h3>Docker Desktop</h3>
-          <p>ติดตั้ง <strong>Docker Desktop</strong> (Windows / macOS) หรือ Docker Engine (Linux)<br/>
-          Memory ≥ 4 GB, CPU ≥ 2 cores, Disk ≥ 10 GB ว่าง</p>
-          <pre>docker --version
-docker compose version</pre>
-        </div>
-        <div class="step">
-          <h3>Git</h3>
-          <pre>git --version</pre>
-        </div>
-        <div class="step">
-          <h3>Access ถึง Database ต้นทาง</h3>
-          <p>ต้องเชื่อมต่อ MSSQL (DGSI) และ PostgreSQL (PaperCut) ได้จาก host หรือ container</p>
-        </div>
-        <div class="step">
-          <h3>Google Cloud Service Account</h3>
-          <p>ต้องการสำหรับ BigQuery pipelines: <code>student_information_pipeline</code> และ <code>printer_solution_pipeline</code><br/>
-          วาง JSON key ไว้ที่ <code>config/secrets/</code></p>
-        </div>
+    <div class="report-cover">
+      <div class="doc-label">Technical Documentation</div>
+      <h1>Build &amp; Setup Guide</h1>
+      <div class="subtitle">วิธีติดตั้งและรัน Seamless Data Pipeline บน Docker Compose</div>
+      <div class="report-meta">
+        <span><strong>Runtime</strong>Docker Compose</span>
+        <span><strong>Airflow</strong>3.1.8</span>
+        <span><strong>OS</strong>Windows / macOS / Linux</span>
+        <span><strong>Updated</strong>June 2026</span>
       </div>
     </div>
 
-    <!-- SECTION 2 -->
-    <div class="section" id="clone">
-      <h2>2. Clone / เตรียมโปรเจกต์</h2>
-      <pre>git clone &lt;repo-url&gt; seamless_data_pipeline
+    <div class="report-body">
+
+      <!-- 1. PREREQUISITES -->
+      <div class="section" id="prerequisites">
+        <div class="section-heading">
+          <div class="section-num">1</div>
+          <h2>Prerequisites</h2>
+        </div>
+        <p>ตรวจสอบให้ครบก่อนเริ่ม setup ระบบต้องการ resource ขั้นต่ำดังนี้</p>
+        <div class="steps">
+          <div class="step">
+            <h3>Docker Desktop</h3>
+            <p>ติดตั้ง <strong>Docker Desktop</strong> (Windows / macOS) หรือ Docker Engine (Linux)<br/>
+            Memory ≥ 4 GB &nbsp;·&nbsp; CPU ≥ 2 cores &nbsp;·&nbsp; Disk ≥ 10 GB ว่าง</p>
+            <pre>docker --version
+docker compose version</pre>
+          </div>
+          <div class="step">
+            <h3>Git</h3>
+            <pre>git --version</pre>
+          </div>
+          <div class="step">
+            <h3>Network Access ถึง Database ต้นทาง</h3>
+            <p>ต้องเชื่อมต่อ <strong>MSSQL (SKY)</strong> และ <strong>PostgreSQL (PaperCut)</strong> ได้จาก host หรือ Docker container</p>
+          </div>
+          <div class="step">
+            <h3>Google Cloud Service Account</h3>
+            <p>ต้องการสำหรับ BigQuery pipelines: <code>student_information_pipeline</code> และ <code>printer_solution_pipeline</code><br/>
+            วาง JSON key ไว้ที่ <code>config/secrets/</code></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. CLONE -->
+      <div class="section" id="clone">
+        <div class="section-heading">
+          <div class="section-num">2</div>
+          <h2>Clone โปรเจกต์</h2>
+        </div>
+        <pre>git clone &lt;repo-url&gt; seamless_data_pipeline
 cd seamless_data_pipeline</pre>
-      <p>โครงสร้างโฟลเดอร์หลักที่ต้องมี:</p>
-      <pre>seamless_data_pipeline/
-├── dags/               ← DAG files + source modules
+        <p>โครงสร้างโฟลเดอร์หลักที่ต้องมี:</p>
+        <pre>seamless_data_pipeline/
+├── dags/                    ← DAG files + source modules
 │   └── src/
 │       ├── config.py
-│       ├── dgsi/       ← finance_invoice, staging_student
-│       ├── education/  ← student_information
+│       ├── dgsi/            ← finance_invoice, staging_student
+│       ├── education/       ← student_information
 │       ├── information_tech/ ← printer_solution
-│       └── helpers/    ← audit, emailer, logger
+│       └── helpers/         ← audit, emailer, logger
 ├── config/
 │   ├── airflow.cfg
-│   └── secrets/        ← GCP service account keys (ห้าม commit)
+│   └── secrets/             ← GCP service account keys (ห้าม commit)
 ├── plugins/
-├── .env                ← Environment variables
+├── .env                     ← Environment variables
 ├── docker-compose.yaml
 └── requirements.txt</pre>
-    </div>
+      </div>
 
-    <!-- SECTION 3 -->
-    <div class="section" id="env">
-      <h2>3. ตั้งค่า .env</h2>
-      <p>สร้าง / แก้ไขไฟล์ <code>.env</code> ที่ root ของโปรเจกต์:</p>
-      <pre># UID ของ Airflow container (Linux ให้รัน: echo $UID)
+      <!-- 3. ENV -->
+      <div class="section" id="env">
+        <div class="section-heading">
+          <div class="section-num">3</div>
+          <h2>ตั้งค่า .env</h2>
+        </div>
+        <p>สร้าง / แก้ไขไฟล์ <code>.env</code> ที่ root ของโปรเจกต์:</p>
+        <pre># UID ของ Airflow container (Linux ให้รัน: echo $UID)
 AIRFLOW_UID=50000
 
 # ===================== SMTP (Email Notification) =====================
@@ -251,225 +268,240 @@ FIN_INV_TARGET_TABLE=finance_invoice_20251110
 FIN_INV_KEY_COL=invoiceId
 FIN_INV_BATCH_SIZE=1000</pre>
 
-      <div class="callout warn">
-        <span class="callout-icon">⚠️</span>
-        <div><strong>.env มี credentials ห้าม commit ขึ้น Git!</strong><br/>
-        ตรวจสอบว่า <code>.gitignore</code> มี <code>.env</code> และ <code>config/secrets/</code> อยู่แล้ว</div>
+        <div class="callout warn">
+          <span class="callout-icon">⚠️</span>
+          <div><strong>.env มี credentials ห้าม commit ขึ้น Git!</strong><br/>
+          ตรวจสอบว่า <code>.gitignore</code> มีรายการ <code>.env</code> และ <code>config/secrets/</code> อยู่แล้ว</div>
+        </div>
+
+        <h3 class="sub">Environment Variables อ้างอิง</h3>
+        <table>
+          <thead><tr><th>Variable</th><th>ค่าตัวอย่าง</th><th>Required</th><th>คำอธิบาย</th></tr></thead>
+          <tbody>
+            <tr><td>AIRFLOW_UID</td><td>50000</td><td><span class="badge badge-req">required</span></td><td>User ID ใน container</td></tr>
+            <tr><td>SMTP_HOST</td><td>smtp.gmail.com</td><td><span class="badge badge-req">required</span></td><td>SMTP server สำหรับ email</td></tr>
+            <tr><td>SMTP_PORT</td><td>465</td><td><span class="badge badge-req">required</span></td><td>465 = SSL, 587 = STARTTLS</td></tr>
+            <tr><td>SMTP_USER</td><td>user@gmail.com</td><td><span class="badge badge-req">required</span></td><td>บัญชี Gmail ที่ใช้ส่ง</td></tr>
+            <tr><td>SMTP_PASSWORD</td><td>xxxx xxxx xxxx xxxx</td><td><span class="badge badge-req">required</span></td><td>Gmail App Password (16 หลัก)</td></tr>
+            <tr><td>ALERT_EMAILS</td><td>admin@example.com</td><td><span class="badge badge-req">required</span></td><td>ผู้รับ email แจ้งเตือน</td></tr>
+            <tr><td>FIN_INV_BATCH_SIZE</td><td>1000</td><td><span class="badge badge-opt">optional</span></td><td>จำนวนแถวต่อ batch ใน MERGE</td></tr>
+          </tbody>
+        </table>
       </div>
 
-      <h3>Environment Variables อ้างอิง</h3>
-      <table>
-        <thead><tr><th>Variable</th><th>ค่าตัวอย่าง</th><th>Required</th><th>คำอธิบาย</th></tr></thead>
-        <tbody>
-          <tr><td>AIRFLOW_UID</td><td>50000</td><td><span class="badge badge-req">required</span></td><td>User ID ใน container</td></tr>
-          <tr><td>SMTP_HOST</td><td>smtp.gmail.com</td><td><span class="badge badge-req">required</span></td><td>SMTP server สำหรับ email notification</td></tr>
-          <tr><td>SMTP_PORT</td><td>465</td><td><span class="badge badge-req">required</span></td><td>465 = SSL, 587 = STARTTLS</td></tr>
-          <tr><td>SMTP_USER</td><td>user@gmail.com</td><td><span class="badge badge-req">required</span></td><td>บัญชี Gmail ที่ใช้ส่ง</td></tr>
-          <tr><td>SMTP_PASSWORD</td><td>xxxx xxxx xxxx xxxx</td><td><span class="badge badge-req">required</span></td><td>Gmail App Password (ไม่ใช่ password ปกติ)</td></tr>
-          <tr><td>ALERT_EMAILS</td><td>admin@example.com</td><td><span class="badge badge-req">required</span></td><td>ผู้รับ email แจ้งเตือน</td></tr>
-          <tr><td>FIN_INV_BATCH_SIZE</td><td>1000</td><td><span class="badge badge-opt">optional</span></td><td>จำนวนแถวต่อ batch ใน MERGE</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- SECTION 4 -->
-    <div class="section" id="connections">
-      <h2>4. Airflow Connections</h2>
-      <p>หลัง Airflow รันแล้ว เข้า <strong>Admin → Connections</strong> แล้วเพิ่ม Connection ต่อไปนี้:</p>
-
-      <h3>mssql_student_info — ต้นทางข้อมูลนักศึกษา / Finance Invoice</h3>
-      <table>
-        <thead><tr><th>Field</th><th>ค่า</th></tr></thead>
-        <tbody>
-          <tr><td>Connection Id</td><td>mssql_student_info</td></tr>
-          <tr><td>Connection Type</td><td>Microsoft SQL Server</td></tr>
-          <tr><td>Host</td><td>&lt;IP หรือ hostname ของ MSSQL&gt;</td></tr>
-          <tr><td>Schema</td><td>ชื่อ database ต้นทาง</td></tr>
-          <tr><td>Login</td><td>sql_username</td></tr>
-          <tr><td>Password</td><td>sql_password</td></tr>
-          <tr><td>Port</td><td>1433</td></tr>
-        </tbody>
-      </table>
-
-      <h3>mssql_data_op — ปลายทาง MSSQL สำหรับ MERGE</h3>
-      <table>
-        <thead><tr><th>Field</th><th>ค่า</th></tr></thead>
-        <tbody>
-          <tr><td>Connection Id</td><td>mssql_data_op</td></tr>
-          <tr><td>Connection Type</td><td>Microsoft SQL Server</td></tr>
-          <tr><td>Host</td><td>&lt;MSSQL target host&gt;</td></tr>
-          <tr><td>Schema</td><td>ชื่อ database ปลายทาง</td></tr>
-          <tr><td>Login / Password</td><td>sql_username / sql_password</td></tr>
-          <tr><td>Port</td><td>1433</td></tr>
-        </tbody>
-      </table>
-
-      <h3>mssql_data_op2 — Status DB สำหรับ Staging Student</h3>
-      <table>
-        <thead><tr><th>Field</th><th>ค่า</th></tr></thead>
-        <tbody>
-          <tr><td>Connection Id</td><td>mssql_data_op2</td></tr>
-          <tr><td>Connection Type</td><td>Microsoft SQL Server</td></tr>
-          <tr><td>Host / Port</td><td>MSSQL host / 1433</td></tr>
-          <tr><td>Schema</td><td>database ที่มี status table</td></tr>
-        </tbody>
-      </table>
-
-      <h3>postgresql_printer_solution — PostgreSQL (PaperCut)</h3>
-      <table>
-        <thead><tr><th>Field</th><th>ค่า</th></tr></thead>
-        <tbody>
-          <tr><td>Connection Id</td><td>postgresql_printer_solution</td></tr>
-          <tr><td>Connection Type</td><td>Postgres</td></tr>
-          <tr><td>Host</td><td>&lt;PostgreSQL host&gt;</td></tr>
-          <tr><td>Schema</td><td>papercut (หรือชื่อ DB)</td></tr>
-          <tr><td>Login / Password</td><td>pg_user / pg_password</td></tr>
-          <tr><td>Port</td><td>5432</td></tr>
-        </tbody>
-      </table>
-
-      <h3>google_cloud_default — Google Cloud / BigQuery</h3>
-      <table>
-        <thead><tr><th>Field</th><th>ค่า</th></tr></thead>
-        <tbody>
-          <tr><td>Connection Id</td><td>google_cloud_default</td></tr>
-          <tr><td>Connection Type</td><td>Google Cloud</td></tr>
-          <tr><td>Project Id</td><td>muic-data-prod</td></tr>
-          <tr><td>Keyfile Path</td><td>/opt/airflow/config/secrets/service_account.json</td></tr>
-        </tbody>
-      </table>
-
-      <div class="callout info">
-        <span class="callout-icon">ℹ️</span>
-        <div>วาง Service Account JSON ไว้ที่ <code>config/secrets/service_account.json</code> แล้ว mount เข้า container ผ่าน volume ที่กำหนดใน <code>docker-compose.yaml</code></div>
-      </div>
-    </div>
-
-    <!-- SECTION 5 -->
-    <div class="section" id="variables">
-      <h2>5. Airflow Variables (Admin → Variables)</h2>
-      <table>
-        <thead><tr><th>Key</th><th>Default</th><th>คำอธิบาย</th></tr></thead>
-        <tbody>
-          <tr><td>BQ_PROJECT</td><td>muic-data-prod</td><td>GCP Project ID</td></tr>
-          <tr><td>BQ_DATASET</td><td>Education</td><td>BigQuery Dataset สำหรับ student info</td></tr>
-          <tr><td>BQ_TABLE</td><td>student_information</td><td>BigQuery Table ปลายทาง</td></tr>
-          <tr><td>MSSQL_CONN_ID</td><td>mssql_student_info</td><td>Connection ID สำหรับ MSSQL ต้นทาง</td></tr>
-          <tr><td>GCP_CONN_ID</td><td>google_cloud_default</td><td>Connection ID สำหรับ GCP</td></tr>
-          <tr><td>PRINTER_BQ_DATASET</td><td>PaperCut</td><td>BigQuery Dataset สำหรับ printer</td></tr>
-          <tr><td>PRINTER_BQ_TABLE</td><td>monthly_printer_usage</td><td>BigQuery Table สำหรับ printer</td></tr>
-          <tr><td>PRINTER_POSTGRESQL_CONN_ID</td><td>mssql_student_info</td><td>Connection ID PostgreSQL printer</td></tr>
-        </tbody>
-      </table>
-      <div class="callout tip">
-        <span class="callout-icon">✅</span>
-        <div>ถ้าไม่ set Variable, ระบบจะใช้ <strong>default_var</strong> ที่กำหนดใน <code>dags/src/config.py</code> โดยอัตโนมัติ</div>
-      </div>
-    </div>
-
-    <!-- SECTION 6 -->
-    <div class="section" id="start">
-      <h2>6. รัน Docker Compose</h2>
-
-      <div class="steps">
-        <div class="step">
-          <h3>Initialize Airflow (ครั้งแรกเท่านั้น)</h3>
-          <pre>docker compose up airflow-init</pre>
-          <p>รอจนเห็น <code>exited with code 0</code> — ระบบจะ migrate DB และสร้าง admin user</p>
+      <!-- 4. CONNECTIONS -->
+      <div class="section" id="connections">
+        <div class="section-heading">
+          <div class="section-num">4</div>
+          <h2>Airflow Connections</h2>
         </div>
-        <div class="step">
-          <h3>รัน Services ทั้งหมด</h3>
-          <pre>docker compose up -d</pre>
-          <p>รอประมาณ 1-2 นาทีจนทุก service healthy</p>
+        <p>หลัง Airflow รันแล้ว เข้า <strong>Admin → Connections</strong> แล้วเพิ่ม Connection ต่อไปนี้ครบทุกรายการ:</p>
+
+        <div class="conn-grid">
+
+          <div class="conn-card">
+            <div class="conn-card-head">🗄️ mssql_student_info <span style="opacity:.6;font-weight:400;font-size:.75rem;">— SKY (Source)</span></div>
+            <table>
+              <tr><td>Type</td><td>Microsoft SQL Server</td></tr>
+              <tr><td>Host</td><td>&lt;SKY hostname / IP&gt;</td></tr>
+              <tr><td>Schema</td><td>ชื่อ database ต้นทาง (SKY)</td></tr>
+              <tr><td>Login / Pass</td><td>sql_username / sql_password</td></tr>
+              <tr><td>Port</td><td>1433</td></tr>
+            </table>
+          </div>
+
+          <div class="conn-card">
+            <div class="conn-card-head">🗄️ mssql_data_op <span style="opacity:.6;font-weight:400;font-size:.75rem;">— Target</span></div>
+            <table>
+              <tr><td>Type</td><td>Microsoft SQL Server</td></tr>
+              <tr><td>Host</td><td>&lt;MSSQL target host&gt;</td></tr>
+              <tr><td>Schema</td><td>ชื่อ database ปลายทาง</td></tr>
+              <tr><td>Login / Pass</td><td>sql_username / sql_password</td></tr>
+              <tr><td>Port</td><td>1433</td></tr>
+            </table>
+          </div>
+
+          <div class="conn-card">
+            <div class="conn-card-head">🗄️ mssql_data_op2 <span style="opacity:.6;font-weight:400;font-size:.75rem;">— Status DB</span></div>
+            <table>
+              <tr><td>Type</td><td>Microsoft SQL Server</td></tr>
+              <tr><td>Host</td><td>&lt;MSSQL host&gt;</td></tr>
+              <tr><td>Schema</td><td>database ที่มี status table</td></tr>
+              <tr><td>Port</td><td>1433</td></tr>
+            </table>
+          </div>
+
+          <div class="conn-card">
+            <div class="conn-card-head">🐘 postgresql_printer_solution <span style="opacity:.6;font-weight:400;font-size:.75rem;">— PaperCut</span></div>
+            <table>
+              <tr><td>Type</td><td>Postgres</td></tr>
+              <tr><td>Host</td><td>&lt;PostgreSQL host&gt;</td></tr>
+              <tr><td>Schema</td><td>papercut (หรือชื่อ DB)</td></tr>
+              <tr><td>Login / Pass</td><td>pg_user / pg_password</td></tr>
+              <tr><td>Port</td><td>5432</td></tr>
+            </table>
+          </div>
+
+          <div class="conn-card">
+            <div class="conn-card-head">☁️ google_cloud_default <span style="opacity:.6;font-weight:400;font-size:.75rem;">— BigQuery</span></div>
+            <table>
+              <tr><td>Type</td><td>Google Cloud</td></tr>
+              <tr><td>Project Id</td><td>muic-data-prod</td></tr>
+              <tr><td>Keyfile Path</td><td>/opt/airflow/config/secrets/service_account.json</td></tr>
+            </table>
+          </div>
+
         </div>
-        <div class="step">
-          <h3>ตรวจสอบ Status</h3>
-          <pre>docker compose ps</pre>
-          <p>ทุก service ควรแสดง <code>healthy</code> หรือ <code>running</code></p>
-        </div>
-        <div class="step">
-          <h3>เข้า Airflow Web UI</h3>
-          <p>เปิด browser ไปที่ <a href="http://localhost:8080" target="_blank"><strong>http://localhost:8080</strong></a><br/>
-          username: <code>airflow</code> &nbsp; password: <code>airflow</code></p>
-        </div>
-        <div class="step">
-          <h3>(Optional) Flower — Monitor Celery Workers</h3>
-          <pre>docker compose --profile flower up -d</pre>
-          <p>เข้าดูที่ <a href="http://localhost:5555" target="_blank">http://localhost:5555</a></p>
+
+        <div class="callout info">
+          <span class="callout-icon">ℹ️</span>
+          <div>วาง Service Account JSON ไว้ที่ <code>config/secrets/service_account.json</code> — โฟลเดอร์นี้ถูก mount เข้า container ผ่าน volume ที่กำหนดใน <code>docker-compose.yaml</code> อยู่แล้ว</div>
         </div>
       </div>
 
-      <div class="callout warn">
-        <span class="callout-icon">⚠️</span>
-        <div><strong>Windows — AIRFLOW_UID</strong><br/>
-        บน Windows ไม่ต้องเปลี่ยน <code>AIRFLOW_UID</code> จากค่า default <code>50000</code> ใน <code>.env</code></div>
+      <!-- 5. VARIABLES -->
+      <div class="section" id="variables">
+        <div class="section-heading">
+          <div class="section-num">5</div>
+          <h2>Airflow Variables</h2>
+        </div>
+        <p>เข้า <strong>Admin → Variables</strong> แล้วเพิ่ม key ต่อไปนี้ตามต้องการ (ถ้าไม่ set จะใช้ default จาก <code>config.py</code> อัตโนมัติ)</p>
+        <table>
+          <thead><tr><th>Key</th><th>Default</th><th>คำอธิบาย</th></tr></thead>
+          <tbody>
+            <tr><td>BQ_PROJECT</td><td>muic-data-prod</td><td>GCP Project ID</td></tr>
+            <tr><td>BQ_DATASET</td><td>Education</td><td>BigQuery Dataset สำหรับ student info</td></tr>
+            <tr><td>BQ_TABLE</td><td>student_information</td><td>BigQuery Table ปลายทาง</td></tr>
+            <tr><td>MSSQL_CONN_ID</td><td>mssql_student_info</td><td>Connection ID สำหรับ MSSQL ต้นทาง</td></tr>
+            <tr><td>GCP_CONN_ID</td><td>google_cloud_default</td><td>Connection ID สำหรับ GCP</td></tr>
+            <tr><td>PRINTER_BQ_DATASET</td><td>PaperCut</td><td>BigQuery Dataset สำหรับ printer</td></tr>
+            <tr><td>PRINTER_BQ_TABLE</td><td>monthly_printer_usage</td><td>BigQuery Table สำหรับ printer</td></tr>
+            <tr><td>PRINTER_POSTGRESQL_CONN_ID</td><td>mssql_student_info</td><td>Connection ID PostgreSQL printer</td></tr>
+          </tbody>
+        </table>
+        <div class="callout tip">
+          <span class="callout-icon">✅</span>
+          <div>ค่า default ทั้งหมดกำหนดไว้ใน <code>dags/src/config.py</code> ด้วย <code>Variable.get(..., default_var=...)</code> จึงรันได้โดยไม่ต้อง set ทุก variable</div>
+        </div>
       </div>
-    </div>
 
-    <!-- SECTION 7 -->
-    <div class="section" id="verify">
-      <h2>7. ตรวจสอบ Services</h2>
-      <pre># ดู log ของ scheduler
+      <!-- 6. START -->
+      <div class="section" id="start">
+        <div class="section-heading">
+          <div class="section-num">6</div>
+          <h2>รัน Docker Compose</h2>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <h3>Initialize Airflow <span style="font-weight:400;color:var(--muted)">(ครั้งแรกเท่านั้น)</span></h3>
+            <pre>docker compose up airflow-init</pre>
+            <p>รอจนเห็น <code>exited with code 0</code> — ระบบจะ migrate DB และสร้าง admin user อัตโนมัติ</p>
+          </div>
+          <div class="step">
+            <h3>รัน Services ทั้งหมด</h3>
+            <pre>docker compose up -d</pre>
+            <p>รอประมาณ 1–2 นาทีจนทุก service แสดงสถานะ healthy</p>
+          </div>
+          <div class="step">
+            <h3>ตรวจสอบ Status</h3>
+            <pre>docker compose ps</pre>
+            <p>ทุก service ควรแสดง <code>healthy</code> หรือ <code>running</code></p>
+          </div>
+          <div class="step">
+            <h3>เข้า Airflow Web UI</h3>
+            <p>เปิด browser ไปที่ <a href="http://localhost:8080" target="_blank"><strong>http://localhost:8080</strong></a><br/>
+            username: <code>airflow</code> &nbsp;·&nbsp; password: <code>airflow</code></p>
+          </div>
+          <div class="step">
+            <h3>(Optional) Flower — Monitor Celery Workers</h3>
+            <pre>docker compose --profile flower up -d</pre>
+            <p>เข้าดูที่ <a href="http://localhost:5555" target="_blank">http://localhost:5555</a></p>
+          </div>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-icon">⚠️</span>
+          <div><strong>Windows — AIRFLOW_UID</strong><br/>
+          บน Windows ไม่ต้องเปลี่ยน <code>AIRFLOW_UID</code> จากค่า default <code>50000</code> ใน <code>.env</code></div>
+        </div>
+      </div>
+
+      <!-- 7. VERIFY -->
+      <div class="section" id="verify">
+        <div class="section-heading">
+          <div class="section-num">7</div>
+          <h2>ตรวจสอบ Services</h2>
+        </div>
+        <pre># ดู log แบบ real-time
 docker compose logs -f airflow-scheduler
-
-# ดู log ของ worker
 docker compose logs -f airflow-worker
 
-# ดู log เฉพาะ service เดียว
+# ดู log ย้อนหลัง 50 บรรทัด
 docker compose logs --tail=50 airflow-apiserver</pre>
 
-      <h3>Health Check Endpoints</h3>
-      <table>
-        <thead><tr><th>Service</th><th>URL</th></tr></thead>
-        <tbody>
-          <tr><td>API Server / Web UI</td><td>http://localhost:8080/api/v2/monitor/health</td></tr>
-          <tr><td>Scheduler</td><td>http://localhost:8974/health (ภายใน container)</td></tr>
-          <tr><td>Flower (Celery)</td><td>http://localhost:5555 (ต้องเปิด profile)</td></tr>
-        </tbody>
-      </table>
-    </div>
+        <h3 class="sub">Health Check Endpoints</h3>
+        <table>
+          <thead><tr><th>Service</th><th>URL / วิธีตรวจ</th></tr></thead>
+          <tbody>
+            <tr><td>API Server / Web UI</td><td>http://localhost:8080/api/v2/monitor/health</td></tr>
+            <tr><td>Scheduler</td><td>http://localhost:8974/health (ภายใน container)</td></tr>
+            <tr><td>Flower (Celery)</td><td>http://localhost:5555 (ต้องเปิด --profile flower)</td></tr>
+          </tbody>
+        </table>
+      </div>
 
-    <!-- SECTION 8 -->
-    <div class="section" id="stop">
-      <h2>8. หยุด / ลบ Container</h2>
-      <pre># หยุด containers (เก็บ volumes ไว้)
+      <!-- 8. STOP -->
+      <div class="section" id="stop">
+        <div class="section-heading">
+          <div class="section-num">8</div>
+          <h2>หยุด / Reset</h2>
+        </div>
+        <pre># หยุด containers (เก็บ volumes / data ไว้)
 docker compose down
 
-# หยุด + ลบ volumes ทั้งหมด (ล้าง Airflow DB ด้วย)
+# หยุด + ลบ volumes ทั้งหมด (reset Airflow DB ด้วย)
 docker compose down --volumes --remove-orphans</pre>
-      <div class="callout danger">
-        <span class="callout-icon">🚨</span>
-        <div><code>--volumes</code> จะลบ PostgreSQL metadata ของ Airflow ทั้งหมด (DAG runs, logs, connections, variables) — ใช้เมื่อต้องการ reset เท่านั้น</div>
+        <div class="callout danger">
+          <span class="callout-icon">🚨</span>
+          <div><code>--volumes</code> จะลบ PostgreSQL metadata ของ Airflow ทั้งหมด (DAG runs, logs, connections, variables) — ใช้เมื่อต้องการ reset ระบบใหม่จาก scratch เท่านั้น</div>
+        </div>
       </div>
-    </div>
 
-    <!-- SECTION 9 -->
-    <div class="section" id="tips">
-      <h2>Tips &amp; Troubleshoot</h2>
+      <!-- 9. TIPS -->
+      <div class="section" id="tips">
+        <div class="section-heading">
+          <div class="section-num">9</div>
+          <h2>Tips &amp; Troubleshoot</h2>
+        </div>
 
-      <h3>เพิ่ม Python packages</h3>
-      <p>packages หลักกำหนดใน <code>requirements.txt</code> แต่ใน Docker Compose ใช้ <code>_PIP_ADDITIONAL_REQUIREMENTS</code> ใน <code>docker-compose.yaml</code>:<br/>
-      สำหรับ production ควร build custom Docker image แทน</p>
+        <h3 class="sub">เพิ่ม Python packages</h3>
+        <p>packages ติดตั้งผ่าน <code>_PIP_ADDITIONAL_REQUIREMENTS</code> ใน <code>docker-compose.yaml</code> (ติดตั้งทุกครั้งที่ start) สำหรับ production ควร build custom Docker image แทน</p>
 
-      <h3>DAG ไม่โชว์ใน UI</h3>
-      <pre># ตรวจสอบ DAG parse error
-docker compose exec airflow-scheduler airflow dags list-import-errors</pre>
+        <h3 class="sub">DAG ไม่โชว์ใน UI</h3>
+        <pre>docker compose exec airflow-scheduler airflow dags list-import-errors</pre>
 
-      <h3>ดู logs ของ Task run</h3>
-      <p>ไปที่ Airflow UI → DAG → Graph → คลิก Task → Log</p>
+        <h3 class="sub">ดู Log ของ Task</h3>
+        <p>Airflow UI → DAG → Graph View → คลิก Task → แท็บ <strong>Log</strong></p>
 
-      <h3>รัน DAG ด้วย CLI</h3>
-      <pre>docker compose exec airflow-scheduler \
+        <h3 class="sub">Trigger DAG ด้วย CLI</h3>
+        <pre>docker compose exec airflow-scheduler \
   airflow dags trigger student_information_pipeline</pre>
 
-      <h3>ปัญหา Memory ไม่พอ (Docker Desktop)</h3>
-      <p>ไปที่ Docker Desktop → Settings → Resources → Memory: เพิ่มเป็น ≥ 4 GB</p>
+        <h3 class="sub">ปัญหา Memory ไม่พอ (Docker Desktop)</h3>
+        <p>Docker Desktop → Settings → Resources → Memory: เพิ่มเป็น ≥ 4 GB แล้ว Apply &amp; Restart</p>
 
-      <h3>Gmail App Password</h3>
-      <p>เปิด 2-Step Verification ก่อน → Google Account → Security → App passwords → สร้าง password 16 หลักสำหรับ Airflow</p>
+        <h3 class="sub">Gmail App Password</h3>
+        <p>Google Account → Security → เปิด 2-Step Verification → App passwords → สร้าง password 16 หลักสำหรับ Airflow (ไม่ใช่ password บัญชีปกติ)</p>
+      </div>
+
+    </div><!-- /report-body -->
+
+    <div class="report-footer">
+      <span>Seamless Data Pipeline — Build &amp; Setup Guide</span>
+      <span>Apache Airflow 3.1.8 &nbsp;·&nbsp; June 2026</span>
     </div>
 
-  </main>
+  </article>
 </div>
 
 <footer>Seamless Data Pipeline — Apache Airflow 3.1.8 &nbsp;|&nbsp; Last updated: June 2026</footer>

@@ -9,7 +9,7 @@
       --primary: #2563eb;
       --primary-dark: #1d4ed8;
       --accent: #0ea5e9;
-      --bg: #f8fafc;
+      --bg: #f1f5f9;
       --card: #ffffff;
       --border: #e2e8f0;
       --text: #1e293b;
@@ -21,119 +21,112 @@
       --code-text: #e2e8f0;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
     a { color: var(--primary); text-decoration: none; }
     a:hover { text-decoration: underline; }
 
+    /* NAV */
     nav {
       background: var(--primary);
       padding: 0 2rem;
-      display: flex;
-      align-items: center;
-      gap: 2rem;
-      height: 56px;
-      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; gap: 2rem;
+      height: 52px; position: sticky; top: 0; z-index: 100;
       box-shadow: 0 2px 8px rgba(0,0,0,.2);
     }
-    nav .brand { color: #fff; font-weight: 700; font-size: 1.1rem; white-space: nowrap; }
-    nav a { color: rgba(255,255,255,.85); font-size: .9rem; padding: 4px 10px; border-radius: 4px; }
-    nav a:hover, nav a.active { background: rgba(255,255,255,.15); color: #fff; text-decoration: none; }
+    nav .brand { color: #fff; font-weight: 700; font-size: 1rem; white-space: nowrap; }
+    nav a { color: rgba(255,255,255,.8); font-size: .88rem; padding: 3px 10px; border-radius: 4px; }
+    nav a:hover, nav a.active { background: rgba(255,255,255,.18); color: #fff; text-decoration: none; }
 
-    .layout { display: flex; max-width: 1150px; margin: 0 auto; padding: 2.5rem 1.5rem; gap: 2rem; }
+    /* LAYOUT */
+    .layout { display: flex; max-width: 1180px; margin: 2rem auto; padding: 0 1.5rem; gap: 1.75rem; align-items: flex-start; }
 
     /* SIDEBAR */
-    .toc { width: 220px; flex-shrink: 0; position: sticky; top: 76px; align-self: flex-start; }
-    .toc h4 { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: .75rem; }
-    .toc ul { list-style: none; }
-    .toc li { margin-bottom: .3rem; }
-    .toc a { font-size: .88rem; color: var(--muted); display: block; padding: .2rem .5rem; border-radius: 4px; }
-    .toc a:hover { background: var(--border); color: var(--text); text-decoration: none; }
+    .sidebar { width: 210px; flex-shrink: 0; position: sticky; top: 68px; }
+    .sidebar-box { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.1rem 1rem; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    .sidebar-box h4 { font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: .75rem; }
+    .sidebar-box ol { list-style: none; padding: 0; counter-reset: toc; }
+    .sidebar-box li { counter-increment: toc; margin-bottom: .1rem; }
+    .sidebar-box li a { display: flex; align-items: baseline; gap: .4rem; font-size: .82rem; color: var(--muted); padding: .25rem .4rem; border-radius: 5px; line-height: 1.4; }
+    .sidebar-box li a::before { content: counter(toc) "."; font-size: .72rem; font-weight: 700; color: var(--primary); flex-shrink: 0; }
+    .sidebar-box li a:hover { background: #f1f5f9; color: var(--text); text-decoration: none; }
+    .sidebar-links { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: .4rem; }
+    .sidebar-links a { display: flex; align-items: center; gap: .45rem; font-size: .82rem; background: var(--primary); color: #fff; padding: .4rem .75rem; border-radius: 6px; font-weight: 600; }
+    .sidebar-links a:hover { background: var(--primary-dark); text-decoration: none; }
 
-    /* CONTENT */
-    .content { flex: 1; min-width: 0; }
+    /* REPORT */
+    .report { flex: 1; min-width: 0; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.07); overflow: hidden; }
 
-    /* PIPELINE CARD */
-    .pipeline {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      margin-bottom: 2.5rem;
-      overflow: hidden;
-      box-shadow: 0 1px 4px rgba(0,0,0,.06);
-      scroll-margin-top: 76px;
-    }
-    .pipeline-header {
-      padding: 1.25rem 1.5rem;
+    /* Cover */
+    .report-cover { background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%); padding: 3rem 3rem 2.5rem; color: #fff; }
+    .report-cover .doc-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; opacity: .75; margin-bottom: .75rem; }
+    .report-cover h1 { font-size: 1.9rem; font-weight: 800; line-height: 1.2; margin-bottom: .6rem; }
+    .report-cover .subtitle { font-size: 1rem; opacity: .88; margin-bottom: 1.75rem; }
+    .report-meta { display: flex; gap: 2rem; flex-wrap: wrap; font-size: .82rem; opacity: .85; border-top: 1px solid rgba(255,255,255,.25); padding-top: 1.25rem; }
+    .report-meta span strong { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; opacity: .75; margin-bottom: .1rem; }
+
+    /* Body */
+    .report-body { padding: 2.5rem 3rem; }
+
+    /* Section */
+    .section { margin-bottom: 2.75rem; scroll-margin-top: 68px; }
+    .section + .section { border-top: 1px dashed var(--border); padding-top: 2.75rem; }
+    .section-heading { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.25rem; padding-bottom: .65rem; border-bottom: 2px solid var(--border); }
+    .section-num { width: 2rem; height: 2rem; background: var(--primary); color: #fff; border-radius: 6px; font-size: .85rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .section-heading h2 { font-size: 1.2rem; color: var(--primary-dark); font-weight: 700; }
+
+    p { font-size: .93rem; margin-bottom: .85rem; }
+    h3.sub { font-size: .95rem; font-weight: 700; color: var(--primary-dark); margin: 1.25rem 0 .6rem; border-left: 3px solid var(--primary); padding-left: .6rem; }
+
+    /* PIPELINE HEADER BANNER */
+    .pipeline-banner {
+      border-radius: 10px;
+      padding: 1.1rem 1.25rem;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: 1rem;
-      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.25rem;
+      color: #fff;
     }
-    .pipeline-header.finance  { background: linear-gradient(135deg, #1e40af, #2563eb); color: #fff; }
-    .pipeline-header.staging  { background: linear-gradient(135deg, #065f46, #059669); color: #fff; }
-    .pipeline-header.student  { background: linear-gradient(135deg, #7c2d12, #ea580c); color: #fff; }
-    .pipeline-header.printer  { background: linear-gradient(135deg, #4c1d95, #7c3aed); color: #fff; }
-    .pipeline-icon { font-size: 2rem; }
-    .pipeline-title h2 { font-size: 1.2rem; margin-bottom: .2rem; }
-    .pipeline-title p { font-size: .88rem; opacity: .88; }
-
-    .pipeline-body { padding: 1.5rem; }
+    .pipeline-banner.finance { background: linear-gradient(135deg, #1e40af, #2563eb); }
+    .pipeline-banner.staging { background: linear-gradient(135deg, #065f46, #059669); }
+    .pipeline-banner.student { background: linear-gradient(135deg, #7c2d12, #ea580c); }
+    .pipeline-banner.printer { background: linear-gradient(135deg, #4c1d95, #7c3aed); }
+    .pipeline-banner .icon { font-size: 2rem; }
+    .pipeline-banner h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: .15rem; }
+    .pipeline-banner p { font-size: .85rem; opacity: .88; margin: 0; }
 
     /* INFO GRID */
-    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: .75rem; margin-bottom: 1.5rem; }
-    .info-cell { background: #f1f5f9; border-radius: 8px; padding: .75rem 1rem; }
-    .info-cell .label { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: .2rem; }
-    .info-cell .value { font-size: .9rem; font-weight: 600; color: var(--text); }
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .65rem; margin-bottom: 1.25rem; }
+    .info-cell { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: .65rem .85rem; }
+    .info-cell .label { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: .2rem; }
+    .info-cell .value { font-size: .87rem; font-weight: 600; color: var(--text); }
 
-    /* FLOW DIAGRAM */
-    .flow { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: 1rem 0 1.5rem; }
-    .flow-task {
-      background: var(--primary);
-      color: #fff;
-      border-radius: 8px;
-      padding: .45rem .85rem;
-      font-size: .82rem;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-    .flow-task.orange { background: #ea580c; }
-    .flow-task.green  { background: #16a34a; }
-    .flow-task.purple { background: #7c3aed; }
-    .flow-task.gray   { background: #475569; }
-    .flow-arrow { color: var(--muted); font-size: 1.1rem; font-weight: 700; }
-
-    /* SECTION HEADING */
-    h3.sub { font-size: 1rem; color: var(--primary-dark); margin: 1.25rem 0 .6rem; border-left: 3px solid var(--primary); padding-left: .6rem; }
+    /* FLOW */
+    .flow { display: flex; flex-wrap: wrap; gap: .45rem; align-items: center; margin: .85rem 0 1.1rem; }
+    .flow-task { color: #fff; border-radius: 7px; padding: .4rem .8rem; font-size: .8rem; font-weight: 600; white-space: nowrap; }
+    .ft-gray   { background: #475569; }
+    .ft-blue   { background: #2563eb; }
+    .ft-orange { background: #ea580c; }
+    .ft-green  { background: #16a34a; }
+    .ft-purple { background: #7c3aed; }
+    .flow-arrow { color: var(--muted); font-size: 1rem; font-weight: 700; }
 
     /* TABLE */
-    table { width: 100%; border-collapse: collapse; font-size: .86rem; margin: .5rem 0 1rem; }
-    th { background: #e2e8f0; color: var(--text); text-align: left; padding: .5rem .8rem; font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
-    td { padding: .5rem .8rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    table { width: 100%; border-collapse: collapse; font-size: .86rem; margin: .6rem 0 1rem; }
+    th { background: #1e293b; color: #e2e8f0; text-align: left; padding: .5rem .85rem; font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; }
+    td { padding: .52rem .85rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #f8fafc; }
     tr:last-child td { border-bottom: none; }
-    td:first-child { font-family: "Courier New", monospace; font-size: .82rem; white-space: nowrap; }
+    td:first-child { font-family: "Courier New", monospace; font-size: .81rem; white-space: nowrap; }
 
     /* CODE */
-    pre {
-      background: var(--code-bg);
-      color: var(--code-text);
-      border-radius: 8px;
-      padding: 1rem 1.25rem;
-      font-family: "Courier New", Consolas, monospace;
-      font-size: .8rem;
-      overflow-x: auto;
-      line-height: 1.6;
-      margin: .6rem 0;
-    }
+    pre { background: var(--code-bg); color: var(--code-text); border-radius: 8px; padding: 1rem 1.25rem; font-family: "Courier New", Consolas, monospace; font-size: .79rem; overflow-x: auto; line-height: 1.6; margin: .6rem 0; }
     code { background: #e2e8f0; color: #c2410c; padding: .1em .35em; border-radius: 4px; font-size: .87em; font-family: "Courier New", Consolas, monospace; }
     pre code { background: transparent; color: inherit; padding: 0; }
 
     /* CALLOUT */
-    .callout {
-      border-radius: 8px; padding: .85rem 1rem; margin: .75rem 0;
-      font-size: .88rem; border-left: 4px solid;
-      display: flex; gap: .65rem; align-items: flex-start;
-    }
-    .callout-icon { font-size: 1rem; flex-shrink: 0; margin-top: .05rem; }
+    .callout { border-radius: 8px; padding: .85rem 1rem; margin: .75rem 0; font-size: .87rem; border-left: 4px solid; display: flex; gap: .6rem; align-items: flex-start; }
+    .callout-icon { font-size: 1rem; flex-shrink: 0; margin-top: .1rem; }
     .callout.info   { background: #eff6ff; border-color: var(--primary); }
     .callout.tip    { background: #f0fdf4; border-color: var(--success); }
     .callout.warn   { background: #fffbeb; border-color: var(--warning); }
@@ -145,18 +138,10 @@
     .badge-orange { background: #ffedd5; color: #c2410c; }
     .badge-purple { background: #ede9fe; color: #6d28d9; }
 
-    /* SHARED PATTERN SECTION */
-    .shared {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 2.5rem;
-      scroll-margin-top: 76px;
-    }
-    .shared h2 { font-size: 1.25rem; border-left: 4px solid var(--accent); padding-left: .75rem; margin-bottom: 1rem; color: var(--primary-dark); }
+    /* Report footer */
+    .report-footer { background: #f8fafc; border-top: 1px solid var(--border); padding: 1rem 3rem; display: flex; justify-content: space-between; align-items: center; font-size: .78rem; color: var(--muted); }
 
-    footer { text-align: center; padding: 2rem 1rem; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--border); margin-top: 2rem; }
+    footer { text-align: center; padding: 1.5rem 1rem; color: var(--muted); font-size: .82rem; }
   </style>
 </head>
 <body>
@@ -170,98 +155,103 @@
 
 <div class="layout">
 
-  <aside class="toc">
-    <h4>สารบัญ</h4>
-    <ul>
-      <li><a href="#pattern">ETL Pattern ทั่วไป</a></li>
-      <li><a href="#finance">Finance Invoice</a></li>
-      <li><a href="#staging">Staging Student</a></li>
-      <li><a href="#student">Student Information</a></li>
-      <li><a href="#printer">Printer Solution</a></li>
-      <li><a href="#helpers">Shared Helpers</a></li>
-    </ul>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-box">
+      <h4>สารบัญ</h4>
+      <ol>
+        <li><a href="#pattern">ETL Pattern ทั่วไป</a></li>
+        <li><a href="#finance">Finance Invoice</a></li>
+        <li><a href="#staging">Staging Student</a></li>
+        <li><a href="#student">Student Information</a></li>
+        <li><a href="#printer">Printer Solution</a></li>
+        <li><a href="#helpers">Shared Helpers</a></li>
+      </ol>
+      <div class="sidebar-links">
+        <a href="index.html">📋 Overview</a>
+        <a href="build.html">🚀 Build &amp; Setup</a>
+      </div>
+    </div>
   </aside>
 
-  <main class="content">
+  <!-- REPORT -->
+  <article class="report">
 
-    <!-- ETL PATTERN -->
-    <div class="shared" id="pattern">
-      <h2>ETL Pattern ทั่วไป (ทุก Pipeline)</h2>
-      <p>ทุก DAG ใน project นี้ใช้ pattern เดียวกัน โดยส่งข้อมูลระหว่าง task ผ่าน <strong>Parquet file</strong> บน shared volume:</p>
-
-      <div class="flow">
-        <div class="flow-task gray">mark_start</div>
-        <span class="flow-arrow">→</span>
-        <div class="flow-task">extract_to_file</div>
-        <span class="flow-arrow">→</span>
-        <div class="flow-task orange">transform</div>
-        <span class="flow-arrow">→</span>
-        <div class="flow-task green">validate</div>
-        <span class="flow-arrow">→</span>
-        <div class="flow-task purple">load</div>
-        <span class="flow-arrow">→</span>
-        <div class="flow-task gray">notify</div>
-      </div>
-
-      <table>
-        <thead><tr><th>Task</th><th>หน้าที่</th><th>Input / Output</th></tr></thead>
-        <tbody>
-          <tr>
-            <td>mark_start</td>
-            <td>บันทึก timestamp เริ่มต้น</td>
-            <td>→ <code>float</code> (Unix timestamp)</td>
-          </tr>
-          <tr>
-            <td>extract_to_file</td>
-            <td>ดึงข้อมูลจาก source DB เขียนเป็น Parquet</td>
-            <td>→ <code>str</code> (path ไฟล์ raw.parquet)</td>
-          </tr>
-          <tr>
-            <td>transform</td>
-            <td>ทำความสะอาด, normalize, type casting</td>
-            <td>raw.parquet → clean.parquet</td>
-          </tr>
-          <tr>
-            <td>validate</td>
-            <td>ตรวจสอบ schema, null, ค่าผิดปกติ</td>
-            <td>clean.parquet → <code>dict</code> report</td>
-          </tr>
-          <tr>
-            <td>load</td>
-            <td>โหลดข้อมูลเข้า destination (MSSQL/BigQuery)</td>
-            <td>clean.parquet + report → <code>dict</code> stats</td>
-          </tr>
-          <tr>
-            <td>notify</td>
-            <td>ส่ง email สรุปผล (inserted/updated/errors)</td>
-            <td>stats dict → email</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="callout info">
-        <span class="callout-icon">ℹ️</span>
-        <div>การใช้ Parquet เป็น intermediate format ช่วยให้ task แต่ละตัว independent — ถ้า task ใดล้มเหลว Airflow จะ retry เฉพาะ task นั้น โดยไม่ต้อง extract ข้อมูลใหม่ทั้งหมด</div>
+    <div class="report-cover">
+      <div class="doc-label">Technical Documentation</div>
+      <h1>Pipeline Reference</h1>
+      <div class="subtitle">รายละเอียด DAG ทั้ง 4 — ETL flow, task, source files และ connections</div>
+      <div class="report-meta">
+        <span><strong>DAGs</strong>4 pipelines</span>
+        <span><strong>Pattern</strong>Extract → Transform → Validate → Load → Notify</span>
+        <span><strong>Intermediate</strong>Parquet file</span>
+        <span><strong>Updated</strong>June 2026</span>
       </div>
     </div>
 
-    <!-- ======================== FINANCE INVOICE ======================== -->
-    <div class="pipeline" id="finance">
-      <div class="pipeline-header finance">
-        <div class="pipeline-icon">💰</div>
-        <div class="pipeline-title">
-          <h2>finance_invoice_pipeline</h2>
-          <p>ดึง Finance Invoice จาก MSSQL (DGSI) → MERGE เข้า MSSQL (data_op)</p>
+    <div class="report-body">
+
+      <!-- 1. ETL PATTERN -->
+      <div class="section" id="pattern">
+        <div class="section-heading">
+          <div class="section-num">1</div>
+          <h2>ETL Pattern ทั่วไป</h2>
+        </div>
+        <p>ทุก DAG ใน project นี้ใช้ pattern เดียวกัน โดยส่งข้อมูลระหว่าง task ผ่าน <strong>Parquet file</strong> บน shared volume (<code>./dags</code>) แทนการส่ง DataFrame ตรง ๆ ผ่าน XCom ซึ่งมีข้อจำกัดด้านขนาด</p>
+
+        <div class="flow">
+          <div class="flow-task ft-gray">mark_start</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-task ft-blue">extract_to_file</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-task ft-orange">transform</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-task ft-green">validate</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-task ft-purple">load</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-task ft-gray">notify</div>
+        </div>
+
+        <table>
+          <thead><tr><th>Task</th><th>หน้าที่</th><th>Input → Output</th></tr></thead>
+          <tbody>
+            <tr><td>mark_start</td><td>บันทึก timestamp เริ่มต้น</td><td>→ <code>float</code> (Unix timestamp)</td></tr>
+            <tr><td>extract_to_file</td><td>ดึงข้อมูลจาก source DB เขียนเป็น Parquet</td><td>→ <code>str</code> (path ของ raw.parquet)</td></tr>
+            <tr><td>transform</td><td>ทำความสะอาด, normalize, type casting</td><td>raw.parquet → clean.parquet</td></tr>
+            <tr><td>validate</td><td>ตรวจสอบ schema, null, ค่าผิดปกติ</td><td>clean.parquet → <code>dict</code> report</td></tr>
+            <tr><td>load</td><td>โหลดข้อมูลเข้า destination (MSSQL / BigQuery)</td><td>clean.parquet + report → <code>dict</code> stats</td></tr>
+            <tr><td>notify</td><td>ส่ง email สรุปผล (inserted / updated / duration)</td><td>stats dict → email</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout info">
+          <span class="callout-icon">ℹ️</span>
+          <div>การใช้ Parquet เป็น intermediate format ทำให้ task แต่ละตัว independent — ถ้า task ใดล้มเหลว Airflow จะ retry เฉพาะ task นั้นโดยไม่ต้อง extract ข้อมูลใหม่ทั้งหมด</div>
         </div>
       </div>
-      <div class="pipeline-body">
+
+      <!-- 2. FINANCE INVOICE -->
+      <div class="section" id="finance">
+        <div class="section-heading">
+          <div class="section-num">2</div>
+          <h2>Finance Invoice Pipeline</h2>
+        </div>
+
+        <div class="pipeline-banner finance">
+          <div class="icon">💰</div>
+          <div>
+            <h3>finance_invoice_pipeline</h3>
+            <p>ดึง Finance Invoice จาก MSSQL (SKY) → MERGE เข้า MSSQL (data_op)</p>
+          </div>
+        </div>
 
         <div class="info-grid">
-          <div class="info-cell"><div class="label">DAG ID</div><div class="value">finance_invoice_pipeline</div></div>
           <div class="info-cell"><div class="label">Schedule</div><div class="value">ทุกวันศุกร์ 15:00</div></div>
-          <div class="info-cell"><div class="label">Source</div><div class="value">MSSQL (DGSI)</div></div>
+          <div class="info-cell"><div class="label">Source</div><div class="value">MSSQL (SKY)</div></div>
           <div class="info-cell"><div class="label">Destination</div><div class="value">MSSQL (data_op)</div></div>
-          <div class="info-cell"><div class="label">Load Method</div><div class="value">MERGE (Upsert)</div></div>
+          <div class="info-cell"><div class="label">Load Method</div><div class="value">MERGE Upsert</div></div>
+          <div class="info-cell"><div class="label">Key Column</div><div class="value">invoiceId</div></div>
           <div class="info-cell"><div class="label">Batch Size</div><div class="value">1,000 rows</div></div>
           <div class="info-cell"><div class="label">Retries</div><div class="value">2</div></div>
           <div class="info-cell"><div class="label">Tags</div><div class="value">finance, etl</div></div>
@@ -269,232 +259,160 @@
 
         <h3 class="sub">Task Flow</h3>
         <div class="flow">
-          <div class="flow-task gray">mark_start</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-task">extract_to_file</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-task orange">transform_file</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-task green">validate_file</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-task purple">load</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-task gray">notify</div>
+          <div class="flow-task ft-gray">mark_start</div><span class="flow-arrow">→</span>
+          <div class="flow-task ft-blue">extract_to_file</div><span class="flow-arrow">→</span>
+          <div class="flow-task ft-orange">transform_file</div><span class="flow-arrow">→</span>
+          <div class="flow-task ft-green">validate_file</div><span class="flow-arrow">→</span>
+          <div class="flow-task ft-purple">load</div><span class="flow-arrow">→</span>
+          <div class="flow-task ft-gray">notify</div>
         </div>
 
         <h3 class="sub">รายละเอียด Task</h3>
         <table>
           <thead><tr><th>Task</th><th>Module</th><th>รายละเอียด</th></tr></thead>
           <tbody>
-            <tr>
-              <td>extract_to_file</td>
-              <td>dgsi/finance_invoice/extractors/</td>
-              <td>ดึง invoice ทั้งหมดจาก <code>mssql_student_info</code> บันทึกเป็น <code>raw.parquet</code> ใน <code>/opt/airflow/data/finance_invoice/</code></td>
-            </tr>
-            <tr>
-              <td>transform_file</td>
-              <td>dgsi/finance_invoice/transformers/</td>
-              <td>Normalize, type conversion → <code>clean.parquet</code></td>
-            </tr>
-            <tr>
-              <td>validate_file</td>
-              <td>dgsi/finance_invoice/validators/</td>
-              <td>ตรวจสอบความสมบูรณ์ของข้อมูล — fail ถ้า validation ไม่ผ่าน</td>
-            </tr>
-            <tr>
-              <td>load</td>
-              <td>dgsi/finance_invoice/loaders/</td>
-              <td>
-                1. Upload → temp table (<code>finance_invoice_20251110_tmp</code>)<br/>
-                2. Ensure target table มีอยู่<br/>
-                3. MERGE แบบ batch (<code>batch_size=1000</code>) พร้อม audit<br/>
-                4. Drop temp table<br/>
-                Key column: <code>invoiceId</code>
-              </td>
-            </tr>
-            <tr>
-              <td>notify</td>
-              <td>helpers/emailer.py</td>
-              <td>ส่ง email สรุป: inserted / updated / rows_total / duration_sec / target_table</td>
-            </tr>
+            <tr><td>extract_to_file</td><td>dgsi/finance_invoice/extractors/</td><td>ดึง invoice จาก <code>mssql_student_info</code> → <code>raw.parquet</code> ใน <code>/opt/airflow/data/finance_invoice/</code></td></tr>
+            <tr><td>transform_file</td><td>dgsi/finance_invoice/transformers/</td><td>Normalize, type conversion → <code>clean.parquet</code></td></tr>
+            <tr><td>validate_file</td><td>dgsi/finance_invoice/validators/</td><td>ตรวจสอบความสมบูรณ์ — raise <code>AirflowFailException</code> ถ้าไม่ผ่าน</td></tr>
+            <tr><td>load</td><td>dgsi/finance_invoice/loaders/</td>
+              <td>① Upload → temp table <code>finance_invoice_20251110_tmp</code><br/>
+                  ② Ensure target table<br/>
+                  ③ MERGE batch 1,000 rows พร้อม audit log<br/>
+                  ④ Drop temp table</td></tr>
+            <tr><td>notify</td><td>helpers/emailer.py</td><td>Email สรุป: inserted / updated / rows_total / duration_sec / target_table</td></tr>
           </tbody>
         </table>
 
         <h3 class="sub">Source Files</h3>
         <pre>dags/
 ├── finance_invoice_dag.py
-└── src/
-    └── dgsi/
-        └── finance_invoice/
-            ├── extractors/finance_invoice_sql_server.py
-            ├── transformers/finance_invoice.py
-            ├── validators/finance_invoice.py
-            └── loaders/finance_invoice_sql.py</pre>
+└── src/dgsi/finance_invoice/
+    ├── extractors/finance_invoice_sql_server.py
+    ├── transformers/finance_invoice.py
+    ├── validators/finance_invoice.py
+    └── loaders/finance_invoice_sql.py</pre>
 
-        <h3 class="sub">Connections ที่ใช้</h3>
+        <h3 class="sub">Connections</h3>
         <p><span class="badge badge-blue">mssql_student_info</span> (source) &nbsp; <span class="badge badge-orange">mssql_data_op</span> (target)</p>
       </div>
-    </div>
 
-    <!-- ======================== STAGING STUDENT ======================== -->
-    <div class="pipeline" id="staging">
-      <div class="pipeline-header staging">
-        <div class="pipeline-icon">🎓</div>
-        <div class="pipeline-title">
-          <h2>staging_student_pipeline</h2>
-          <p>ดึงข้อมูลนักศึกษา + Status → MERGE เข้า MSSQL Staging table</p>
+      <!-- 3. STAGING STUDENT -->
+      <div class="section" id="staging">
+        <div class="section-heading">
+          <div class="section-num">3</div>
+          <h2>Staging Student Pipeline</h2>
         </div>
-      </div>
-      <div class="pipeline-body">
+
+        <div class="pipeline-banner staging">
+          <div class="icon">🎓</div>
+          <div>
+            <h3>staging_student_pipeline</h3>
+            <p>ดึงข้อมูลนักศึกษา + Status → MERGE เข้า MSSQL Staging table</p>
+          </div>
+        </div>
 
         <div class="info-grid">
-          <div class="info-cell"><div class="label">DAG ID</div><div class="value">staging_student_pipeline</div></div>
           <div class="info-cell"><div class="label">Schedule</div><div class="value">ทุกวันศุกร์ 15:00</div></div>
-          <div class="info-cell"><div class="label">Source</div><div class="value">MSSQL ×2 (DGSI + data_op2)</div></div>
+          <div class="info-cell"><div class="label">Source</div><div class="value">MSSQL (SKY) ×2</div></div>
           <div class="info-cell"><div class="label">Destination</div><div class="value">MSSQL (data_op)</div></div>
-          <div class="info-cell"><div class="label">Load Method</div><div class="value">MERGE (Upsert)</div></div>
+          <div class="info-cell"><div class="label">Load Method</div><div class="value">MERGE Upsert</div></div>
           <div class="info-cell"><div class="label">Key Column</div><div class="value">studentCode</div></div>
+          <div class="info-cell"><div class="label">Batch Size</div><div class="value">1,000 rows</div></div>
+          <div class="info-cell"><div class="label">Retries</div><div class="value">2</div></div>
           <div class="info-cell"><div class="label">Tags</div><div class="value">dgsi, staging, student</div></div>
         </div>
 
         <h3 class="sub">Task Flow</h3>
         <div class="flow">
-          <div class="flow-task gray">mark_start</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-task">extract_to_file</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-task orange">transform_file</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-task purple">load</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-task gray">notify</div>
+          <div class="flow-task ft-gray">mark_start</div><span class="flow-arrow">→</span>
+          <div class="flow-task ft-blue">extract_to_file</div><span class="flow-arrow">→</span>
+          <div class="flow-task ft-orange">transform_file</div><span class="flow-arrow">→</span>
+          <div class="flow-task ft-purple">load</div><span class="flow-arrow">→</span>
+          <div class="flow-task ft-gray">notify</div>
         </div>
 
         <h3 class="sub">รายละเอียด Task</h3>
         <table>
           <thead><tr><th>Task</th><th>Module</th><th>รายละเอียด</th></tr></thead>
           <tbody>
-            <tr>
-              <td>extract_to_file</td>
-              <td>dgsi/staging_student/extractors/</td>
-              <td>
-                ดึงจาก 2 connection แล้ว <strong>LEFT JOIN</strong> ด้วย <code>studentCode</code>:<br/>
-                — <code>mssql_student_info</code>: ข้อมูลนักศึกษา<br/>
-                — <code>mssql_data_op2</code>: สถานะนักศึกษา (status)
-              </td>
-            </tr>
-            <tr>
-              <td>transform_file</td>
-              <td>dgsi/staging_student/transformers/</td>
-              <td>Normalize ข้อมูล, fix/drop invalid rows พร้อม metrics (fixed, dropped)</td>
-            </tr>
-            <tr>
-              <td>load</td>
-              <td>dgsi/staging_student/loaders/</td>
-              <td>
-                MERGE pattern เดียวกับ finance_invoice:<br/>
-                Target table: <code>StagingStudent_20251105</code><br/>
-                Key: <code>studentCode</code>, Batch: 1,000 rows
-              </td>
-            </tr>
-            <tr>
-              <td>notify</td>
-              <td>helpers/emailer.py</td>
-              <td>Email สรุปผล — subject: "DGSI : Staging Student"</td>
-            </tr>
+            <tr><td>extract_to_file</td><td>dgsi/staging_student/extractors/</td>
+              <td>ดึงจาก 2 connection แล้ว <strong>LEFT JOIN</strong> ด้วย <code>studentCode</code>:<br/>
+                  — <code>mssql_student_info</code>: ข้อมูลนักศึกษา<br/>
+                  — <code>mssql_data_op2</code>: สถานะนักศึกษา (status)</td></tr>
+            <tr><td>transform_file</td><td>dgsi/staging_student/transformers/</td><td>Normalize, fix / drop invalid rows พร้อม metrics (fixed, dropped) — validation embed อยู่ใน step นี้</td></tr>
+            <tr><td>load</td><td>dgsi/staging_student/loaders/</td>
+              <td>MERGE pattern เดียวกับ finance_invoice<br/>
+                  Target: <code>StagingStudent_20251105</code> &nbsp;·&nbsp; Key: <code>studentCode</code></td></tr>
+            <tr><td>notify</td><td>helpers/emailer.py</td><td>Email สรุปผล — subject: "DGSI : Staging Student"</td></tr>
           </tbody>
         </table>
 
         <div class="callout tip">
           <span class="callout-icon">✅</span>
-          <div>Pipeline นี้ไม่มี separate validate task — validation ถูก embed ไว้ใน transform step โดย <code>transform_staging_student()</code> return <code>metrics</code> พร้อมกัน</div>
+          <div>Pipeline นี้ไม่มี separate validate task — validation embed ใน transform โดย <code>transform_staging_student()</code> return <code>metrics</code> พร้อมกัน</div>
         </div>
 
         <h3 class="sub">Source Files</h3>
         <pre>dags/
 ├── staging_student_dag.py
-└── src/
-    └── dgsi/
-        └── staging_student/
-            ├── extractors/staging_student_sql_server.py
-            ├── transformers/staging_student.py
-            ├── validators/
-            └── loaders/staging_student_sql.py</pre>
-      </div>
-    </div>
+└── src/dgsi/staging_student/
+    ├── extractors/staging_student_sql_server.py
+    ├── transformers/staging_student.py
+    └── loaders/staging_student_sql.py</pre>
 
-    <!-- ======================== STUDENT INFORMATION ======================== -->
-    <div class="pipeline" id="student">
-      <div class="pipeline-header student">
-        <div class="pipeline-icon">📚</div>
-        <div class="pipeline-title">
-          <h2>student_information_pipeline</h2>
-          <p>ดึงข้อมูลนักศึกษา (MSSQL) → Upsert เข้า Google BigQuery</p>
-        </div>
+        <h3 class="sub">Connections</h3>
+        <p><span class="badge badge-blue">mssql_student_info</span> (student source) &nbsp; <span class="badge badge-blue">mssql_data_op2</span> (status source) &nbsp; <span class="badge badge-orange">mssql_data_op</span> (target)</p>
       </div>
-      <div class="pipeline-body">
+
+      <!-- 4. STUDENT INFORMATION -->
+      <div class="section" id="student">
+        <div class="section-heading">
+          <div class="section-num">4</div>
+          <h2>Student Information Pipeline</h2>
+        </div>
+
+        <div class="pipeline-banner student">
+          <div class="icon">📚</div>
+          <div>
+            <h3>student_information_pipeline</h3>
+            <p>ดึงข้อมูลนักศึกษา (MSSQL) → Upsert เข้า Google BigQuery</p>
+          </div>
+        </div>
 
         <div class="info-grid">
-          <div class="info-cell"><div class="label">DAG ID</div><div class="value">student_information_pipeline</div></div>
-          <div class="info-cell"><div class="label">Schedule</div><div class="value">ทุกวัน 05:00 น.</div></div>
-          <div class="info-cell"><div class="label">Source</div><div class="value">MSSQL (DGSI)</div></div>
-          <div class="info-cell"><div class="label">Destination</div><div class="value">BigQuery — Education.student_information</div></div>
+          <div class="info-cell"><div class="label">Schedule</div><div class="value">ทุกวัน 05:00</div></div>
+          <div class="info-cell"><div class="label">Source</div><div class="value">MSSQL (SKY)</div></div>
+          <div class="info-cell"><div class="label">Destination</div><div class="value">BigQuery (Education)</div></div>
           <div class="info-cell"><div class="label">Load Method</div><div class="value">BQ Upsert (MERGE)</div></div>
           <div class="info-cell"><div class="label">Key Column</div><div class="value">student_id</div></div>
-          <div class="info-cell"><div class="label">Location</div><div class="value">US</div></div>
-          <div class="info-cell"><div class="label">Tags</div><div class="value">education, student_information</div></div>
+          <div class="info-cell"><div class="label">BQ Location</div><div class="value">US</div></div>
+          <div class="info-cell"><div class="label">Retries</div><div class="value">2</div></div>
+          <div class="info-cell"><div class="label">Tags</div><div class="value">education, etl</div></div>
         </div>
 
         <h3 class="sub">Task Flow</h3>
         <div class="flow">
-          <div class="flow-task gray">mark_start</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-task">extract_to_file</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-task orange">transform_file</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-task green">validate_file</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-task purple">load</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-task gray">notify</div>
+          <div class="flow-task ft-gray">mark_start</div><span class="flow-arrow">→</span>
+          <div class="flow-task ft-blue">extract_to_file</div><span class="flow-arrow">→</span>
+          <div class="flow-task ft-orange">transform_file</div><span class="flow-arrow">→</span>
+          <div class="flow-task ft-green">validate_file</div><span class="flow-arrow">→</span>
+          <div class="flow-task ft-purple">load</div><span class="flow-arrow">→</span>
+          <div class="flow-task ft-gray">notify</div>
         </div>
 
         <h3 class="sub">รายละเอียด Task</h3>
         <table>
           <thead><tr><th>Task</th><th>Module</th><th>รายละเอียด</th></tr></thead>
           <tbody>
-            <tr>
-              <td>extract_to_file</td>
-              <td>education/student_information/extractors/</td>
-              <td>อ่าน SQL จาก <code>student_information.sql</code> ผ่าน <code>mssql_student_info</code> → Parquet</td>
-            </tr>
-            <tr>
-              <td>transform_file</td>
-              <td>education/student_information/transformers/</td>
-              <td>Normalize, type casting สำหรับ BigQuery schema</td>
-            </tr>
-            <tr>
-              <td>validate_file</td>
-              <td>education/student_information/validators/</td>
-              <td>ตรวจ schema และ null — ไม่ fail ถ้าไม่มีข้อมูล (ok=True, rows=0)</td>
-            </tr>
-            <tr>
-              <td>load</td>
-              <td>education/student_information/loaders/</td>
-              <td>
-                เพิ่ม <code>ingestion_date</code> (วันที่ run)<br/>
-                <code>load_dataframe_to_bq_upsert_with_counts()</code>:<br/>
-                — สร้าง temp table ใน BQ<br/>
-                — MERGE เข้า target ด้วย key: <code>student_id</code><br/>
-                — return inserted / updated counts
-              </td>
-            </tr>
-            <tr>
-              <td>notify</td>
-              <td>helpers/emailer.py</td>
-              <td>Email สรุปผล — subject: "Education : Student Information"</td>
-            </tr>
+            <tr><td>extract_to_file</td><td>education/student_information/extractors/</td><td>อ่าน SQL จาก <code>student_information.sql</code> ผ่าน <code>mssql_student_info</code> → Parquet</td></tr>
+            <tr><td>transform_file</td><td>education/student_information/transformers/</td><td>Normalize, type casting สำหรับ BigQuery schema</td></tr>
+            <tr><td>validate_file</td><td>education/student_information/validators/</td><td>ตรวจ schema และ null — ไม่ fail ถ้าไม่มีข้อมูล (ok=True, rows=0)</td></tr>
+            <tr><td>load</td><td>education/student_information/loaders/</td>
+              <td>เพิ่ม <code>ingestion_date</code> (วันที่ run)<br/>
+                  <code>load_dataframe_to_bq_upsert_with_counts()</code>:<br/>
+                  — สร้าง temp table ใน BQ → MERGE เข้า target ด้วย key <code>student_id</code><br/>
+                  — return inserted / updated counts</td></tr>
+            <tr><td>notify</td><td>helpers/emailer.py</td><td>Email สรุปผล — subject: "Education : Student Information"</td></tr>
           </tbody>
         </table>
 
@@ -512,87 +430,63 @@
         <h3 class="sub">Source Files</h3>
         <pre>dags/
 ├── student_information_dag.py
-└── src/
-    └── education/
-        └── student_information/
-            ├── extractors/student_information_sql_server.py
-            ├── transformers/student_information.py
-            ├── validators/student_information.py
-            ├── loaders/student_information_bigquery.py
-            └── sql/student_information.sql</pre>
+└── src/education/student_information/
+    ├── extractors/student_information_sql_server.py
+    ├── transformers/student_information.py
+    ├── validators/student_information.py
+    ├── loaders/student_information_bigquery.py
+    └── sql/student_information.sql</pre>
       </div>
-    </div>
 
-    <!-- ======================== PRINTER SOLUTION ======================== -->
-    <div class="pipeline" id="printer">
-      <div class="pipeline-header printer">
-        <div class="pipeline-icon">🖨️</div>
-        <div class="pipeline-title">
-          <h2>printer_solution_pipeline</h2>
-          <p>ดึงข้อมูลการใช้เครื่องพิมพ์ (PostgreSQL) → Insert-only เข้า BigQuery รายเดือน</p>
+      <!-- 5. PRINTER SOLUTION -->
+      <div class="section" id="printer">
+        <div class="section-heading">
+          <div class="section-num">5</div>
+          <h2>Printer Solution Pipeline</h2>
         </div>
-      </div>
-      <div class="pipeline-body">
+
+        <div class="pipeline-banner printer">
+          <div class="icon">🖨️</div>
+          <div>
+            <h3>printer_solution_pipeline</h3>
+            <p>ดึงข้อมูลการใช้เครื่องพิมพ์ (PostgreSQL) → Insert-only เข้า BigQuery รายเดือน</p>
+          </div>
+        </div>
 
         <div class="info-grid">
-          <div class="info-cell"><div class="label">DAG ID</div><div class="value">printer_solution_pipeline</div></div>
           <div class="info-cell"><div class="label">Schedule</div><div class="value">ทุกวัน (daily)</div></div>
           <div class="info-cell"><div class="label">Source</div><div class="value">PostgreSQL (PaperCut)</div></div>
-          <div class="info-cell"><div class="label">Destination</div><div class="value">BigQuery — PaperCut.monthly_printer_usage</div></div>
-          <div class="info-cell"><div class="label">Load Method</div><div class="value">Insert-only (dedup by key)</div></div>
-          <div class="info-cell"><div class="label">Aggregation</div><div class="value">รายเดือน (Calendar + Budget year)</div></div>
-          <div class="info-cell"><div class="label">Tags</div><div class="value">information_tech, printer_solution</div></div>
+          <div class="info-cell"><div class="label">Destination</div><div class="value">BigQuery (PaperCut)</div></div>
+          <div class="info-cell"><div class="label">Load Method</div><div class="value">Insert-only (dedup)</div></div>
+          <div class="info-cell"><div class="label">Aggregation</div><div class="value">รายเดือน</div></div>
+          <div class="info-cell"><div class="label">BQ Location</div><div class="value">US</div></div>
+          <div class="info-cell"><div class="label">Retries</div><div class="value">2</div></div>
+          <div class="info-cell"><div class="label">Tags</div><div class="value">information_tech</div></div>
         </div>
 
         <h3 class="sub">Task Flow</h3>
         <div class="flow">
-          <div class="flow-task gray">mark_start</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-task">extract_to_file</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-task orange">transform_printer</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-task green">validate_printer</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-task purple">load_printer</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-task gray">notify</div>
+          <div class="flow-task ft-gray">mark_start</div><span class="flow-arrow">→</span>
+          <div class="flow-task ft-blue">extract_to_file</div><span class="flow-arrow">→</span>
+          <div class="flow-task ft-orange">transform_printer</div><span class="flow-arrow">→</span>
+          <div class="flow-task ft-green">validate_printer</div><span class="flow-arrow">→</span>
+          <div class="flow-task ft-purple">load_printer</div><span class="flow-arrow">→</span>
+          <div class="flow-task ft-gray">notify</div>
         </div>
 
         <h3 class="sub">รายละเอียด Task</h3>
         <table>
           <thead><tr><th>Task</th><th>Module</th><th>รายละเอียด</th></tr></thead>
           <tbody>
-            <tr>
-              <td>extract_to_file</td>
-              <td>information_tech/printer_solution/extractors/</td>
-              <td>ดึงจาก <code>postgresql_printer_solution</code> → <code>printer_solution_raw.parquet</code></td>
-            </tr>
-            <tr>
-              <td>transform_printer</td>
-              <td>information_tech/printer_solution/transformers/</td>
-              <td>Aggregate ข้อมูลเป็น <strong>รายเดือน</strong> พร้อมคำนวณ usage_calendar_year, usage_budget_year</td>
-            </tr>
-            <tr>
-              <td>validate_printer</td>
-              <td>information_tech/printer_solution/validators/</td>
-              <td>ตรวจสอบ columns ที่จำเป็น ไม่ fail เมื่อไม่มีข้อมูล</td>
-            </tr>
-            <tr>
-              <td>load_printer</td>
-              <td>information_tech/printer_solution/loaders/</td>
-              <td>
-                <code>load_printer_usage_monthly_insert_only()</code>:<br/>
-                — ตรวจว่า record (composite key) มีใน BQ แล้วหรือยัง<br/>
-                — Insert เฉพาะ row ที่ยังไม่มี (ไม่ update)<br/>
-                Unique key: user_name + full_name + department + office + job_type + usage_calendar_year + usage_calendar_month + usage_budget_year + usage_budget_month_order
-              </td>
-            </tr>
-            <tr>
-              <td>notify</td>
-              <td>helpers/emailer.py</td>
-              <td>Email สรุปผล — subject: "Information Tech : Printer Solution"</td>
-            </tr>
+            <tr><td>extract_to_file</td><td>information_tech/printer_solution/extractors/</td><td>ดึงจาก <code>postgresql_printer_solution</code> → <code>printer_solution_raw.parquet</code></td></tr>
+            <tr><td>transform_printer</td><td>information_tech/printer_solution/transformers/</td><td>Aggregate เป็น <strong>รายเดือน</strong> พร้อมคำนวณ usage_calendar_year, usage_budget_year</td></tr>
+            <tr><td>validate_printer</td><td>information_tech/printer_solution/validators/</td><td>ตรวจสอบ columns ที่จำเป็น — ไม่ fail เมื่อไม่มีข้อมูล</td></tr>
+            <tr><td>load_printer</td><td>information_tech/printer_solution/loaders/</td>
+              <td><code>load_printer_usage_monthly_insert_only()</code>:<br/>
+                  — ตรวจ composite key ว่ามีใน BQ แล้วหรือยัง<br/>
+                  — Insert เฉพาะ row ที่ยังไม่มี (ไม่ update)<br/>
+                  Unique key: user_name + full_name + department + office + job_type + usage_calendar_year + usage_calendar_month + usage_budget_year + usage_budget_month_order</td></tr>
+            <tr><td>notify</td><td>helpers/emailer.py</td><td>Email สรุปผล — subject: "Information Tech : Printer Solution"</td></tr>
           </tbody>
         </table>
 
@@ -610,45 +504,52 @@
         <h3 class="sub">Source Files</h3>
         <pre>dags/
 ├── printer_solution_dag.py
-└── src/
-    └── information_tech/
-        └── printer_solution/
-            ├── extractors/priner_solution_postgresql.py
-            ├── transformers/printer_solution.py
-            ├── validators/printer_solution.py
-            └── loaders/printer_solution_bigquery.py</pre>
+└── src/information_tech/printer_solution/
+    ├── extractors/priner_solution_postgresql.py
+    ├── transformers/printer_solution.py
+    ├── validators/printer_solution.py
+    └── loaders/printer_solution_bigquery.py</pre>
       </div>
+
+      <!-- 6. SHARED HELPERS -->
+      <div class="section" id="helpers">
+        <div class="section-heading">
+          <div class="section-num">6</div>
+          <h2>Shared Helpers</h2>
+        </div>
+        <p>Module กลางใน <code>dags/src/helpers/</code> ที่ทุก pipeline ใช้ร่วมกัน</p>
+
+        <h3 class="sub">audit.py — write_audit_line()</h3>
+        <p>บันทึก audit log สำหรับทุก pipeline action (SUMMARY, INSERT, UPDATE) เป็น JSON line file เพื่อ traceability และ debugging</p>
+
+        <h3 class="sub">emailer.py — send_summary_email()</h3>
+        <p>ส่ง email สรุปผลการ run อ่าน SMTP config จาก environment variables ใน <code>.env</code> เป็นอันดับแรก</p>
+        <table>
+          <thead><tr><th>Field ใน Email</th><th>มาจาก</th></tr></thead>
+          <tbody>
+            <tr><td>subject</td><td>pipeline name (เช่น "DGSI : Finance Invoice")</td></tr>
+            <tr><td>status</td><td>success / no_data / failed</td></tr>
+            <tr><td>rows_total</td><td>จำนวนแถวทั้งหมดที่ดึงได้</td></tr>
+            <tr><td>inserted / updated</td><td>จำนวนแถวที่ insert / update</td></tr>
+            <tr><td>duration_sec</td><td>เวลาที่ใช้ทั้งหมด (จาก mark_start timestamp)</td></tr>
+            <tr><td>target_table</td><td>ชื่อ table ปลายทางเต็ม (schema.table หรือ project.dataset.table)</td></tr>
+            <tr><td>run_date</td><td>วันเวลาที่ run (timezone: Asia/Bangkok)</td></tr>
+            <tr><td>updated_samples</td><td>ตัวอย่าง key ที่ถูก update สูงสุด 10 รายการ</td></tr>
+          </tbody>
+        </table>
+
+        <h3 class="sub">logger.py</h3>
+        <p>Wrapper สำหรับ structured logging ใช้ <code>logging.getLogger("airflow.task")</code> เพื่อให้ log ปรากฏใน Airflow UI ที่ Log tab ของแต่ละ task instance</p>
+      </div>
+
+    </div><!-- /report-body -->
+
+    <div class="report-footer">
+      <span>Seamless Data Pipeline — Pipeline Reference</span>
+      <span>Apache Airflow 3.1.8 &nbsp;·&nbsp; June 2026</span>
     </div>
 
-    <!-- ======================== SHARED HELPERS ======================== -->
-    <div class="shared" id="helpers">
-      <h2>Shared Helpers (dags/src/helpers/)</h2>
-
-      <h3 class="sub">audit.py — write_audit_line()</h3>
-      <p>บันทึก audit log สำหรับทุก pipeline action (SUMMARY, INSERT, UPDATE) เป็น JSON line file เพื่อ traceability</p>
-
-      <h3 class="sub">emailer.py — send_summary_email()</h3>
-      <p>ส่ง email สรุปผลการ run ประกอบด้วย:</p>
-      <table>
-        <thead><tr><th>Field ใน Email</th><th>มาจาก</th></tr></thead>
-        <tbody>
-          <tr><td>subject</td><td>pipeline name (เช่น "DGSI : Finance Invoice")</td></tr>
-          <tr><td>status</td><td>success / no_data / failed</td></tr>
-          <tr><td>rows_total</td><td>จำนวนแถวทั้งหมดที่ดึงได้</td></tr>
-          <tr><td>inserted / updated</td><td>จำนวนแถวที่ insert / update</td></tr>
-          <tr><td>duration_sec</td><td>เวลาที่ใช้ทั้งหมด (จาก mark_start)</td></tr>
-          <tr><td>target_table</td><td>ชื่อ table ปลายทาง</td></tr>
-          <tr><td>run_date</td><td>วันเวลาที่ run (Asia/Bangkok)</td></tr>
-          <tr><td>updated_samples</td><td>ตัวอย่าง key ที่ถูก update (สูงสุด 10 รายการ)</td></tr>
-        </tbody>
-      </table>
-      <p>อ่าน SMTP config จาก environment variables ใน <code>.env</code> เป็นอันดับแรก</p>
-
-      <h3 class="sub">logger.py</h3>
-      <p>Wrapper สำหรับ structured logging — ใช้ <code>logging.getLogger("airflow.task")</code> เพื่อให้ log ปรากฏใน Airflow UI</p>
-    </div>
-
-  </main>
+  </article>
 </div>
 
 <footer>Seamless Data Pipeline — Apache Airflow 3.1.8 &nbsp;|&nbsp; Last updated: June 2026</footer>

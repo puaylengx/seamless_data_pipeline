@@ -133,6 +133,41 @@
     .report-footer { background: #f8fafc; border-top: 1px solid var(--border); padding: 1rem 3rem; display: flex; justify-content: space-between; align-items: center; font-size: .78rem; color: var(--muted); }
 
     footer { text-align: center; padding: 1.5rem 1rem; color: var(--muted); font-size: .82rem; }
+
+    /* PATH CHOOSER */
+    .path-chooser { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0 .5rem; }
+    .path-card {
+      border-radius: 10px; padding: 1.25rem 1.25rem 1rem;
+      border: 2px solid; cursor: default;
+      display: flex; flex-direction: column; gap: .4rem;
+    }
+    .path-card.path-a { border-color: #059669; background: #f0fdf4; }
+    .path-card.path-b { border-color: #2563eb; background: #eff6ff; }
+    .path-card .path-icon { font-size: 1.6rem; }
+    .path-card h3 { font-size: .95rem; font-weight: 700; margin: 0; }
+    .path-card.path-a h3 { color: #065f46; }
+    .path-card.path-b h3 { color: #1d4ed8; }
+    .path-card p { font-size: .82rem; color: var(--muted); margin: 0; line-height: 1.5; }
+    .path-card .path-jump {
+      display: inline-block; margin-top: .5rem; font-size: .78rem; font-weight: 700;
+      padding: .25rem .65rem; border-radius: 5px; text-decoration: none;
+    }
+    .path-card.path-a .path-jump { background: #059669; color: #fff; }
+    .path-card.path-a .path-jump:hover { background: #047857; text-decoration: none; }
+    .path-card.path-b .path-jump { background: #2563eb; color: #fff; }
+    .path-card.path-b .path-jump:hover { background: #1d4ed8; text-decoration: none; }
+
+    /* PATH LABEL on section */
+    .path-label {
+      display: inline-flex; align-items: center; gap: .35rem;
+      font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+      padding: .2rem .6rem; border-radius: 4px; margin-bottom: .6rem;
+    }
+    .path-label.a { background: #d1fae5; color: #065f46; }
+    .path-label.b { background: #dbeafe; color: #1d4ed8; }
+    .path-label.shared { background: #e2e8f0; color: #475569; }
+    .section-num.num-a { background: #059669; font-size: .75rem; }
+    .section-num.num-b { background: #2563eb; }
   </style>
 </head>
 <body>
@@ -152,7 +187,8 @@
       <h4>สารบัญ</h4>
       <ol>
         <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#clone">Clone โปรเจกต์</a></li>
+        <li><a href="#from-scratch">เริ่มจากศูนย์ (Path A)</a></li>
+        <li><a href="#clone">Clone จาก Repo (Path B)</a></li>
         <li><a href="#env">ตั้งค่า .env</a></li>
         <li><a href="#connections">Airflow Connections</a></li>
         <li><a href="#variables">Airflow Variables</a></li>
@@ -216,12 +252,174 @@ docker compose version</pre>
         </div>
       </div>
 
-      <!-- 2. CLONE -->
+      <!-- PATH CHOOSER -->
+      <div class="section" id="path-chooser" style="margin-bottom:0;border-top:1px dashed var(--border);padding-top:2.75rem;">
+        <p style="font-weight:700;font-size:.95rem;margin-bottom:.65rem;">เลือกวิธีเริ่มต้น — มี 2 เส้นทาง:</p>
+        <div class="path-chooser">
+          <div class="path-card path-a">
+            <div class="path-icon">🆕</div>
+            <h3>Path A — เริ่มจากศูนย์</h3>
+            <p>ยังไม่มีไฟล์ <code>docker-compose.yaml</code> หรือ Git repo<br/>ดาวน์โหลดและตั้งค่าทุกอย่างด้วยตัวเอง</p>
+            <a href="#from-scratch" class="path-jump">→ ไปที่ Section 2</a>
+          </div>
+          <div class="path-card path-b">
+            <div class="path-icon">📦</div>
+            <h3>Path B — มี Repository อยู่แล้ว</h3>
+            <p>มี Git repo ที่มีไฟล์ <code>docker-compose.yaml</code> และ DAGs ครบแล้ว<br/>แค่ Clone แล้วตั้งค่า credentials</p>
+            <a href="#clone" class="path-jump">→ ไปที่ Section 3</a>
+          </div>
+        </div>
+        <p style="font-size:.82rem;color:var(--muted);margin-top:.75rem;">ทั้งสองเส้นทางมาบรรจบกันที่ Section 4 (ตั้งค่า .env) เป็นต้นไป</p>
+      </div>
+
+      <!-- 2. FROM SCRATCH -->
+      <div class="section" id="from-scratch">
+        <div class="section-heading">
+          <div class="section-num num-a">2</div>
+          <h2>เริ่มจากศูนย์ — ดาวน์โหลด docker-compose.yaml</h2>
+        </div>
+        <div class="path-label a">Path A — ไม่มี Project มาก่อน</div>
+        <p>ทำตามขั้นตอนนี้เมื่อยังไม่มีไฟล์ใดๆ ในเครื่อง เริ่มตั้งแต่สร้างโฟลเดอร์ไปจนถึงได้ Airflow รันได้จริง</p>
+
+        <div class="steps">
+
+          <div class="step">
+            <h3>สร้างโฟลเดอร์โปรเจกต์</h3>
+            <pre><code class="comment"># Linux / macOS / Git Bash</code>
+mkdir seamless_data_pipeline
+cd seamless_data_pipeline</pre>
+            <pre><code class="comment"># Windows PowerShell</code>
+New-Item -ItemType Directory seamless_data_pipeline
+Set-Location seamless_data_pipeline</pre>
+          </div>
+
+          <div class="step">
+            <h3>ดาวน์โหลด docker-compose.yaml จาก Apache Airflow</h3>
+            <p>ไฟล์นี้คือ Official Airflow 3.1.8 CeleryExecutor template ที่ Apache ให้มา:</p>
+            <pre><code class="comment"># Linux / macOS</code>
+curl -LfO 'https://airflow.apache.org/docs/apache-airflow/3.1.8/docker-compose.yaml'</pre>
+            <pre><code class="comment"># Windows PowerShell</code>
+Invoke-WebRequest `
+  -Uri 'https://airflow.apache.org/docs/apache-airflow/3.1.8/docker-compose.yaml' `
+  -OutFile docker-compose.yaml</pre>
+            <div class="callout info" style="margin-top:.75rem;">
+              <span class="callout-icon">ℹ️</span>
+              <div>ไฟล์ที่ได้มาจาก Apache มี <strong>CeleryExecutor + Redis + PostgreSQL</strong> พร้อมใช้ แต่ยังขาด SMTP config และ MSSQL provider ต้องแก้เพิ่มในขั้นตอนถัดไป</div>
+            </div>
+          </div>
+
+          <div class="step">
+            <h3>ปรับแต่ง docker-compose.yaml สำหรับโปรเจกต์นี้</h3>
+            <p>เปิดไฟล์ <code>docker-compose.yaml</code> แล้วแก้ไข 3 จุดใน block <code>x-airflow-common → environment</code>:</p>
+
+            <h3 class="sub" style="margin-top:1rem;">ก) เพิ่ม MSSQL Provider</h3>
+            <p>แทนที่บรรทัด <code>_PIP_ADDITIONAL_REQUIREMENTS</code> (หรือเพิ่มใหม่ถ้าไม่มี):</p>
+            <pre>    _PIP_ADDITIONAL_REQUIREMENTS: >
+      apache-airflow-providers-microsoft-mssql>=4.4.0</pre>
+
+            <h3 class="sub">ข) เพิ่ม SMTP Configuration</h3>
+            <p>เพิ่มใน <code>environment</code> ของ <code>x-airflow-common</code>:</p>
+            <pre>    AIRFLOW__SMTP__SMTP_HOST: ${SMTP_HOST}
+    AIRFLOW__SMTP__SMTP_PORT: ${SMTP_PORT}
+    AIRFLOW__SMTP__SMTP_STARTTLS: ${SMTP_STARTTLS}
+    AIRFLOW__SMTP__SMTP_SSL: ${SMTP_SSL}
+    AIRFLOW__SMTP__SMTP_USER: ${SMTP_USER}
+    AIRFLOW__SMTP__SMTP_PASSWORD: ${SMTP_PASSWORD}
+    AIRFLOW__SMTP__SMTP_MAIL_FROM: ${SMTP_MAIL_FROM}
+    AIRFLOW__SMTP__SMTP_TIMEOUT: "60"</pre>
+
+            <h3 class="sub">ค) เพิ่ม Config File Path และ env_file</h3>
+            <p>เพิ่มใน <code>environment</code>:</p>
+            <pre>    AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
+    AIRFLOW__LOGGING__LOGGING_LEVEL: INFO</pre>
+            <p>เพิ่มระดับเดียวกับ <code>image:</code> (ไม่ใช่ใน environment):</p>
+            <pre>  env_file:
+    - .env</pre>
+            <div class="callout tip">
+              <span class="callout-icon">✅</span>
+              <div>ดู <code>docker-compose.yaml</code> ใน repo เป็นตัวอย่าง — ไฟล์นั้นได้ปรับแต่งทุกจุดข้างต้นเรียบร้อยแล้ว</div>
+            </div>
+          </div>
+
+          <div class="step">
+            <h3>สร้าง Folder Structure ที่จำเป็น</h3>
+            <pre><code class="comment"># Linux / macOS / Git Bash</code>
+mkdir -p dags/src logs plugins config/secrets</pre>
+            <pre><code class="comment"># Windows PowerShell</code>
+New-Item -ItemType Directory -Force -Path dags\src, logs, plugins, config\secrets</pre>
+            <p>โครงสร้างที่ต้องมีก่อนรัน:</p>
+            <pre>seamless_data_pipeline/
+├── dags/
+│   └── src/
+├── logs/
+├── plugins/
+├── config/
+│   └── secrets/           ← วาง GCP Service Account JSON ที่นี่
+├── .env                   ← สร้างใน Section 4
+└── docker-compose.yaml    ← เพิ่งดาวน์โหลดมา</pre>
+          </div>
+
+          <div class="step">
+            <h3>สร้าง .gitignore</h3>
+            <pre><code class="comment"># Linux / macOS</code>
+cat &lt;&lt;EOF &gt; .gitignore
+.env
+config/secrets/
+logs/
+__pycache__/
+*.pyc
+EOF</pre>
+            <pre><code class="comment"># Windows PowerShell</code>
+@".env
+config/secrets/
+logs/
+__pycache__/
+*.pyc
+"@ | Out-File -Encoding utf8 .gitignore</pre>
+            <div class="callout danger">
+              <span class="callout-icon">🚨</span>
+              <div><strong>สำคัญมาก:</strong> <code>.env</code> มี credentials และ <code>config/secrets/</code> มี GCP key — ห้าม commit ขึ้น Git เด็ดขาด</div>
+            </div>
+          </div>
+
+          <div class="step">
+            <h3>คัดลอก DAG Files เข้าโฟลเดอร์ dags/</h3>
+            <p>วาง DAG files และ src modules ของโปรเจกต์ให้ครบ:</p>
+            <pre>dags/
+├── finance_invoice_dag.py
+├── staging_student_dag.py
+├── student_information_dag.py
+├── printer_solution_dag.py
+└── src/
+    ├── config.py
+    ├── dgsi/
+    │   ├── finance_invoice/
+    │   └── staging_student/
+    ├── education/
+    │   └── student_information/
+    ├── information_tech/
+    │   └── printer_solution/
+    └── helpers/
+        ├── audit.py
+        ├── emailer.py
+        └── logger.py</pre>
+          </div>
+
+        </div>
+
+        <div class="callout tip" style="margin-top:1rem;">
+          <span class="callout-icon">✅</span>
+          <div>เสร็จแล้ว! ข้ามไปที่ <strong><a href="#env">Section 4 — ตั้งค่า .env</a></strong> เพื่อตั้งค่า credentials ได้เลย</div>
+        </div>
+      </div>
+
+      <!-- 3. CLONE -->
       <div class="section" id="clone">
         <div class="section-heading">
-          <div class="section-num">2</div>
-          <h2>Clone โปรเจกต์</h2>
+          <div class="section-num num-b">3</div>
+          <h2>Clone จาก Git Repository</h2>
         </div>
+        <div class="path-label b">Path B — มี Repository อยู่แล้ว</div>
         <pre>git clone &lt;repo-url&gt; seamless_data_pipeline
 cd seamless_data_pipeline</pre>
         <p>โครงสร้างโฟลเดอร์หลักที่ต้องมี:</p>
@@ -242,12 +440,13 @@ cd seamless_data_pipeline</pre>
 └── requirements.txt</pre>
       </div>
 
-      <!-- 3. ENV -->
+      <!-- 4. ENV -->
       <div class="section" id="env">
         <div class="section-heading">
-          <div class="section-num">3</div>
+          <div class="section-num">4</div>
           <h2>ตั้งค่า .env</h2>
         </div>
+        <div class="path-label shared">ทั้ง Path A และ Path B ทำขั้นตอนนี้ร่วมกัน</div>
         <p>สร้าง / แก้ไขไฟล์ <code>.env</code> ที่ root ของโปรเจกต์:</p>
         <pre># UID ของ Airflow container (Linux ให้รัน: echo $UID)
 AIRFLOW_UID=50000
@@ -289,10 +488,10 @@ FIN_INV_BATCH_SIZE=1000</pre>
         </table>
       </div>
 
-      <!-- 4. CONNECTIONS -->
+      <!-- 5. CONNECTIONS -->
       <div class="section" id="connections">
         <div class="section-heading">
-          <div class="section-num">4</div>
+          <div class="section-num">5</div>
           <h2>Airflow Connections</h2>
         </div>
         <p>หลัง Airflow รันแล้ว เข้า <strong>Admin → Connections</strong> แล้วเพิ่ม Connection ต่อไปนี้ครบทุกรายการ:</p>
@@ -359,10 +558,10 @@ FIN_INV_BATCH_SIZE=1000</pre>
         </div>
       </div>
 
-      <!-- 5. VARIABLES -->
+      <!-- 6. VARIABLES -->
       <div class="section" id="variables">
         <div class="section-heading">
-          <div class="section-num">5</div>
+          <div class="section-num">6</div>
           <h2>Airflow Variables</h2>
         </div>
         <p>เข้า <strong>Admin → Variables</strong> แล้วเพิ่ม key ต่อไปนี้ตามต้องการ (ถ้าไม่ set จะใช้ default จาก <code>config.py</code> อัตโนมัติ)</p>
@@ -385,10 +584,10 @@ FIN_INV_BATCH_SIZE=1000</pre>
         </div>
       </div>
 
-      <!-- 6. START -->
+      <!-- 7. START -->
       <div class="section" id="start">
         <div class="section-heading">
-          <div class="section-num">6</div>
+          <div class="section-num">7</div>
           <h2>รัน Docker Compose</h2>
         </div>
         <div class="steps">
@@ -426,10 +625,10 @@ FIN_INV_BATCH_SIZE=1000</pre>
         </div>
       </div>
 
-      <!-- 7. VERIFY -->
+      <!-- 8. VERIFY -->
       <div class="section" id="verify">
         <div class="section-heading">
-          <div class="section-num">7</div>
+          <div class="section-num">8</div>
           <h2>ตรวจสอบ Services</h2>
         </div>
         <pre># ดู log แบบ real-time
@@ -450,10 +649,10 @@ docker compose logs --tail=50 airflow-apiserver</pre>
         </table>
       </div>
 
-      <!-- 8. STOP -->
+      <!-- 9. STOP -->
       <div class="section" id="stop">
         <div class="section-heading">
-          <div class="section-num">8</div>
+          <div class="section-num">9</div>
           <h2>หยุด / Reset</h2>
         </div>
         <pre># หยุด containers (เก็บ volumes / data ไว้)
@@ -467,10 +666,10 @@ docker compose down --volumes --remove-orphans</pre>
         </div>
       </div>
 
-      <!-- 9. TIPS -->
+      <!-- 10. TIPS -->
       <div class="section" id="tips">
         <div class="section-heading">
-          <div class="section-num">9</div>
+          <div class="section-num">10</div>
           <h2>Tips &amp; Troubleshoot</h2>
         </div>
 

@@ -26,7 +26,6 @@ from src.helpers.emailer import load_email_config_from_env, send_summary_email
 from src.dgsi.staging_student.extractors.staging_student_sql_server import (
     build_engine_from_airflow_conn,
     extract_staging_student,
-    extract_status_dataframe,
 )
 from src.dgsi.staging_student.transformers.staging_student import (
     transform_staging_student,
@@ -76,12 +75,8 @@ def staging_student_etl():
 
         # ✅ ดึง Connection object จาก Airflow
         src_conn = BaseHook.get_connection("mssql_student_info")
-        status_conn = BaseHook.get_connection("mssql_data_op2")
 
-        df_student = extract_staging_student(src_conn)
-        df_status = extract_status_dataframe(status_conn)
-
-        df = pd.merge(df_student, df_status, on="studentCode", how="left")
+        df = extract_staging_student(src_conn)
 
         run_id = ctx["run_id"].replace("|", "_").replace(":", "_")
         out_path = DATA_DIR / "extract" / f"staging_student_{run_id}.parquet"

@@ -67,7 +67,7 @@ SELECT DISTINCT
     NULL AS passportEndDate,
     NULL AS passportStatusName,
     NULL AS raceName,
-    CAST(graduateInfo.GraduatedAt AS DATE) AS graduateYear,
+    YEAR(graduateInfo.GraduatedAt) AS graduateYear,
     NULL AS deformName,
     NULL AS deformCardId,
     NULL AS deformCardStartdate,

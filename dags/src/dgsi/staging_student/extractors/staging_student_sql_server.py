@@ -12,8 +12,7 @@ from pathlib import Path
 # ------------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parents[1]   # .../staging_student/
 SQL_DIR  = BASE_DIR / "sql"
-SOURCE_SQL_PATH = SQL_DIR / "staging_student.sql"   # ✅ เปลี่ยนเป็นไฟล์ของ staging_student
-SOURCE_STATUS_SQL_PATH = SQL_DIR / "status_student.sql"   # ✅ เปลี่ยนเป็นไฟล์ของ staging_student
+SOURCE_SQL_PATH = SQL_DIR / "staging_student.sql"
 
 def load_sql(path: str | Path) -> str:
     path = Path(path)
@@ -72,7 +71,3 @@ def extract_staging_student(src_conn, sql_path: str | Path = SOURCE_SQL_PATH) ->
     return pd.read_sql(query, engine)
 
 
-def extract_status_dataframe(src_conn, sql_path: str | Path = SOURCE_STATUS_SQL_PATH) -> pd.DataFrame:
-    engine = build_engine_from_airflow_conn(src_conn)
-    query = load_sql(sql_path)
-    return pd.read_sql(query, engine)

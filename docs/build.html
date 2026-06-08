@@ -764,9 +764,13 @@ docker compose up -d</pre>
         </table>
 
         <h3 class="sub" style="margin-top:1.25rem;">เปลี่ยน Password ผ่าน CLI</h3>
-        <pre>docker compose exec airflow-apiserver airflow users set-password \
+        <pre>docker compose exec airflow-apiserver airflow users reset-password \
   --username airflow \
-  --password &lt;new_password&gt;</pre>
+  --password "&lt;new_password&gt;"</pre>
+        <div class="callout tip">
+          <span class="callout-icon">✅</span>
+          <div>ครอบ password ด้วย <code>"..."</code> เสมอ หาก password มี special characters เช่น <code>* # ! $</code> — ไม่ครอบอาจถูก shell interpret ผิด</div>
+        </div>
 
         <h3 class="sub">เปลี่ยน Password ผ่าน UI</h3>
         <p>Admin → Security → List Users → คลิก ✏️ Edit → แก้ช่อง Password → Save</p>

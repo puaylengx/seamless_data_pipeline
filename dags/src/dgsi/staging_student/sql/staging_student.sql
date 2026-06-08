@@ -1,12 +1,12 @@
 SELECT DISTINCT
     std.Code AS studentCode,
-    CASE 
+    CASE
         WHEN std.TitleId = '17' THEN '002'
         WHEN std.TitleId IN ('12','26','30') OR (std.TitleId = '44' AND std.Code IN ('5380028')) THEN '003'
         WHEN std.TitleId IN ('14','18') THEN '001'
         ELSE 'Not Specified'
     END AS prefixCode,
-    CASE 
+    CASE
         WHEN std.TitleId = '17' THEN 'Mrs.'
         WHEN std.TitleId IN ('12','26','30') OR (std.TitleId = '44' AND std.Code IN ('5380028')) THEN 'Ms.'
         WHEN std.TitleId IN ('14','18') THEN 'Mr.'
@@ -33,7 +33,7 @@ SELECT DISTINCT
     'FAC_01' AS entranceTypeName,
     CASE WHEN NationalityId = 93 THEN 'resident' ELSE 'non-resident' END AS residentType,
     NULL AS studentType,
-    CASE 
+    CASE
         WHEN curri.AbbreviationEn IN ('DTDS','PYPY') THEN 'take a course with IC'
         WHEN std.StudentStatus = 'prc' THEN 'passed_all_required_courses'
         WHEN std.StudentStatus = 'pa'  THEN 'passed_away'
@@ -67,7 +67,7 @@ SELECT DISTINCT
     NULL AS passportEndDate,
     NULL AS passportStatusName,
     NULL AS raceName,
-    NULL AS graduateYear,
+    CAST(graduateInfo.GraduatedAt AS DATE) AS graduateYear,
     NULL AS deformName,
     NULL AS deformCardId,
     NULL AS deformCardStartdate,
@@ -94,8 +94,8 @@ LEFT JOIN curriculum.Curriculums         curri ON curri.Id = curriVersion.Curric
 LEFT JOIN student.AcademicInformations   academicInfo ON academicInfo.StudentId = std.Id
 LEFT JOIN student.AdmissionInformations  admissionInfo ON admissionInfo.StudentId = std.Id
 LEFT JOIN dbo.Terms term ON term.Id = admissionInfo.AdmissionTermId
-WHERE std.Code >= '50%' 
+LEFT JOIN student.GraduationInformations graduateInfo on std.Id = graduateInfo.StudentId
+WHERE std.Code >= '50%'
 AND std.Code  < '90%'
--- AND std.Code = '6881692'
 AND curriInfo.IsActive = '1'
 ORDER BY std.Code;

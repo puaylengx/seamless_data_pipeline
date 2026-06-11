@@ -77,3 +77,15 @@ def get_job_config_staging() -> JobConfigStaging:
     )
 
 
+def get_staging_student_excel_path() -> str:
+    """
+    Path ของไฟล์ Excel ที่มีข้อมูล talent + extra (numberOfSiblings ฯลฯ)
+    ตั้งค่าได้ผ่าน Airflow Variable: STAGING_STD_EXCEL_PATH
+    ถ้าไม่ได้ตั้ง จะคืนค่าว่าง → transform จะข้ามการ merge Excel
+    """
+    return Variable.get(
+        "STAGING_STD_EXCEL_PATH",
+        default_var="/opt/airflow/dags/data/staging_student/Candidate.xlsx",
+    )
+
+

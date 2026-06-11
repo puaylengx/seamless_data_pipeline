@@ -32,7 +32,7 @@ SELECT DISTINCT
     'major' AS programType,
     'FAC_01' AS entranceTypeName,
     CASE WHEN NationalityId = 93 THEN 'resident' ELSE 'non-resident' END AS residentType,
-    NULL AS studentType,
+    CASE WHEN studentFeeType.NameEn = 'inbound' THEN '2' ELSE '1' END AS studentType,
     CASE
         WHEN curri.AbbreviationEn IN ('DTDS','PYPY') THEN 'take a course with IC'
         WHEN std.StudentStatus = 'prc' THEN 'passed_all_required_courses'
@@ -54,7 +54,7 @@ SELECT DISTINCT
         ELSE 'Others' END AS studentStatusName,
     FORMAT(SWITCHOFFSET(CONVERT(datetimeoffset, std.BirthDate), '+07:00'), N'dd/MM/yyyy','th-TH') AS birthdate,
     std.Email AS email,
-    NULL AS NationalityName,
+    nationality.NameEn AS NationalityName,
     NULL AS religionName,
     NULL AS bloodTypeName,
     NULL AS maritalStatusName,
@@ -67,14 +67,24 @@ SELECT DISTINCT
     NULL AS passportEndDate,
     NULL AS passportStatusName,
     NULL AS raceName,
-    YEAR(graduateInfo.GraduatedAt) AS graduateYear,
+    CAST(graduateInfo.GraduatedAt AS DATE) AS graduateYear,
     NULL AS deformName,
     NULL AS deformCardId,
     NULL AS deformCardStartdate,
     NULL AS deformCardEnddate,
-    NULL AS terminateStudyCause,
-    NULL AS studyTypeName,
-    NULL AS studyTimeName,
+    CASE
+        WHEN std.StudentStatus = 'pa'  THEN 'passed_away'
+        WHEN std.StudentStatus = 'rs'  THEN 'resigned'
+        WHEN std.StudentStatus = 'dm'  THEN 'dismissed'
+        WHEN std.StudentStatus = 'np'  THEN 'no_report'
+        WHEN std.StudentStatus = 'd'   THEN 'deleted'
+        WHEN std.StudentStatus = 'b'   THEN 'blacklist'
+        WHEN std.StudentStatus = 'tr'  THEN 'transferred_to_other_university'
+        WHEN std.StudentStatus = 're'  THEN 'reenter'
+        WHEN std.StudentStatus = 'ra'  THEN 're_admission'
+    END AS terminateStudyCause,
+    CASE WHEN studentFeeType.NameEn = 'inbound' THEN N'โครงการพิเศษ' ELSE N'โครงการปกติ' END AS studyTypeName,
+    N'วันธรรมดา (เช้า)' AS studyTimeName,
     CASE
         WHEN academicInfo.CreditEarned <= 36       THEN 1
         WHEN academicInfo.CreditEarned BETWEEN 37 AND 70  THEN 2
@@ -83,8 +93,13 @@ SELECT DISTINCT
         ELSE '1'
     END AS class,
     NULL AS programRegistName,
-    NULL AS gradStatusName,
-    NULL AS dateGraduation,
+    CASE
+        WHEN std.StudentStatus = 'g'   THEN 'graduated'
+        WHEN std.StudentStatus = 'g1'  THEN 'graduated_with_first_class_honors'
+        WHEN std.StudentStatus = 'g2'  THEN 'graduated_with_second_class_honors'
+    ELSE null
+    END AS gradStatusName,
+    CAST(graduateInfo.GraduatedAt AS DATE) AS dateGraduation,
     NULL AS talentName,
     NULL AS systemId
 FROM student.Students AS std
@@ -94,7 +109,9 @@ LEFT JOIN curriculum.Curriculums         curri ON curri.Id = curriVersion.Curric
 LEFT JOIN student.AcademicInformations   academicInfo ON academicInfo.StudentId = std.Id
 LEFT JOIN student.AdmissionInformations  admissionInfo ON admissionInfo.StudentId = std.Id
 LEFT JOIN dbo.Terms term ON term.Id = admissionInfo.AdmissionTermId
-LEFT JOIN student.GraduationInformations graduateInfo on std.Id = graduateInfo.StudentId
+LEFT JOIN (select * from student.GraduationInformations graduateInfo where graduateInfo.IsActive = 1) graduateInfo on std.Id = graduateInfo.StudentId
+left join master.Nationalities nationality on std.NationalityId = nationality.Id
+left join master.StudentFeeTypes studentFeeType on studentFeeType.Id = std.StudentFeeTypeId
 WHERE std.Code >= '50%'
 AND std.Code  < '90%'
 AND curriInfo.IsActive = '1'

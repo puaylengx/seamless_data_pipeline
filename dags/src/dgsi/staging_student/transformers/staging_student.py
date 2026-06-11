@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import re
+import logging
 import pandas as pd
 from datetime import datetime
+from pathlib import Path
 from typing import Callable, Tuple, Dict, Any, Optional
+
+logger = logging.getLogger("airflow.task")
 
 
 # ============================================================
@@ -235,10 +239,13 @@ def drop_duplicates_by_key(df: pd.DataFrame) -> Tuple[pd.DataFrame, int]:
 def transform_staging_student(
     df: pd.DataFrame,
     audit_writer: Optional[Callable[[Dict[str, Any]], None]] = None,
+    excel_path: Optional[str] = None,
+    excel_sheet: int | str = 0,
 ) -> Tuple[pd.DataFrame, Dict[str, int]]:
     """
     ✅ Transform สำหรับ Airflow (เหมือน Finance Invoice)
     - normalize column names (lowercase)
+    - merge Excel talent/extra data (ถ้าระบุ excel_path)
     - clean/drop bad keys
     - clean emails
     - fill studentstatus from studentstatusname แล้ว drop studentstatusname
@@ -257,6 +264,12 @@ def transform_staging_student(
     # ถ้าไม่มี key ให้คืนไป (ให้ loader ตัดสิน)
     if KEY_COL not in df.columns:
         return df.reset_index(drop=True), metrics
+
+    # merge Excel (talent + extra columns)
+    if excel_path and Path(excel_path).exists():
+        df = merge_excel_data(df, excel_path, excel_sheet)
+    elif excel_path:
+        logger.warning("Excel file not found, skipping merge: %s", excel_path)
 
     # drop bad keys
     df, dropped = drop_bad_keys(df, audit_writer)
@@ -279,3 +292,86 @@ def transform_staging_student(
     metrics["dropped"] += dropped
 
     return df.reset_index(drop=True), metrics
+
+
+# ============================================================
+# 5) Excel merge helpers
+# ============================================================
+
+def _clean_item(s: str) -> str:
+    s = s.strip()
+    if s.startswith("- "):
+        s = s[2:].strip()
+    return "" if s in ("-", "") else s.strip()
+
+
+def _build_talent_name(row: pd.Series) -> str | None:
+    from src.dgsi.staging_student.extractors.staging_student_excel import TALENT_COLS
+    parts = []
+    for col in TALENT_COLS:
+        val = row.get(col)
+        if pd.notna(val) and str(val).strip():
+            for item in str(val).replace("\r\n", "\n").split("\n"):
+                cleaned = _clean_item(item)
+                if cleaned:
+                    parts.append(cleaned)
+    result = ", ".join(parts)
+    return result[:255] if result else None
+
+
+def merge_excel_data(
+    df: pd.DataFrame,
+    excel_path: str | Path,
+    sheet: int | str = 0,
+) -> pd.DataFrame:
+    """
+    Enrich the main DataFrame (after normalize_columns) with Excel data.
+    Fills: talentname, numberofsiblings, numberofsiblingsstillstudying, sequencechild.
+    Keys: df["studentcode"] <-> excel["student_id"]
+    """
+    from src.dgsi.staging_student.extractors.staging_student_excel import (
+        EXTRA_COLS,
+        TALENT_COLS,
+        load_excel_data,
+    )
+
+    df_excel = load_excel_data(excel_path, sheet)
+    df = df.copy()
+    df[KEY_COL] = df[KEY_COL].astype(str).str.strip()
+
+    sql_codes = set(df[KEY_COL])
+    excel_codes = set(df_excel["student_id"])
+    overlap = sql_codes & excel_codes
+
+    logger.info(
+        "Excel merge: %d SQL codes, %d Excel codes, %d overlap",
+        len(sql_codes), len(excel_codes), len(overlap),
+    )
+    if not overlap:
+        logger.warning("No matching studentCode between SQL and Excel. Sample SQL: %s", sorted(sql_codes)[:5])
+        logger.warning("Sample Excel: %s", sorted(excel_codes)[:5])
+
+    df = df.merge(df_excel, left_on=KEY_COL, right_on="student_id", how="left")
+
+    df["talentname"] = df.apply(_build_talent_name, axis=1)
+
+    for excel_col, target_col in EXTRA_COLS.items():
+        if excel_col in df.columns:
+            if target_col in df.columns:
+                df[target_col] = df[excel_col].where(df[excel_col].notna(), df[target_col])
+            else:
+                df[target_col] = df[excel_col]
+
+    drop_cols = (
+        ["student_id"]
+        + [c for c in TALENT_COLS if c in df.columns]
+        + [c for c in EXTRA_COLS if c in df.columns]
+    )
+    df.drop(columns=drop_cols, errors="ignore", inplace=True)
+
+    filled = df["talentname"].notna().sum()
+    logger.info(
+        "talentName filled: %d / %d rows (%.1f%%)",
+        filled, len(df), 100 * filled / len(df) if len(df) else 0,
+    )
+    return df

@@ -16,7 +16,7 @@ from airflow.hooks.base import BaseHook
 # ------------------------------------------------------------------
 # Project config / helpers
 # ------------------------------------------------------------------
-from src.config import DATA_DIR, get_conn, get_job_config_staging
+from src.config import DATA_DIR, get_conn, get_job_config_staging, get_staging_student_excel_path
 from src.helpers.audit import write_audit_line
 from src.helpers.emailer import load_email_config_from_env, send_summary_email
 
@@ -93,13 +93,16 @@ def staging_student_etl():
     @task()
     def transform_file(raw_path: str) -> dict:
         """
-        Data quality + normalize
+        Data quality + normalize + merge Excel (talent/extra columns)
         """
         df = pd.read_parquet(raw_path)
+
+        excel_path = get_staging_student_excel_path()
 
         df_clean, metrics = transform_staging_student(
             df,
             audit_writer=write_audit_line,
+            excel_path=excel_path,
         )
 
         out_path = (

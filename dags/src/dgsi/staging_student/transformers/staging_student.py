@@ -239,13 +239,12 @@ def drop_duplicates_by_key(df: pd.DataFrame) -> Tuple[pd.DataFrame, int]:
 def transform_staging_student(
     df: pd.DataFrame,
     audit_writer: Optional[Callable[[Dict[str, Any]], None]] = None,
-    excel_path: Optional[str] = None,
-    excel_sheet: int | str = 0,
+    df_enrollment: Optional[pd.DataFrame] = None,
 ) -> Tuple[pd.DataFrame, Dict[str, int]]:
     """
     ✅ Transform สำหรับ Airflow (เหมือน Finance Invoice)
     - normalize column names (lowercase)
-    - merge Excel talent/extra data (ถ้าระบุ excel_path)
+    - merge enrollment DB data (talent + extra columns) ถ้าส่ง df_enrollment มา
     - clean/drop bad keys
     - clean emails
     - fill studentstatus from studentstatusname แล้ว drop studentstatusname
@@ -265,11 +264,11 @@ def transform_staging_student(
     if KEY_COL not in df.columns:
         return df.reset_index(drop=True), metrics
 
-    # merge Excel (talent + extra columns)
-    if excel_path and Path(excel_path).exists():
-        df = merge_excel_data(df, excel_path, excel_sheet)
-    elif excel_path:
-        logger.warning("Excel file not found, skipping merge: %s", excel_path)
+    # merge enrollment DB data (talent + extra columns)
+    if df_enrollment is not None and not df_enrollment.empty:
+        df = merge_enrollment_data(df, df_enrollment)
+    else:
+        logger.warning("df_enrollment not provided, skipping enrollment merge")
 
     # drop bad keys
     df, dropped = drop_bad_keys(df, audit_writer)
@@ -295,7 +294,7 @@ def transform_staging_student(
 
 
 # ============================================================
-# 5) Excel merge helpers
+# 5) Enrollment merge helpers
 # ============================================================
 
 def _clean_item(s: str) -> str:
@@ -306,7 +305,7 @@ def _clean_item(s: str) -> str:
 
 
 def _build_talent_name(row: pd.Series) -> str | None:
-    from src.dgsi.staging_student.extractors.staging_student_excel import TALENT_COLS
+    from src.dgsi.staging_student.extractors.staging_student_enrollment import TALENT_COLS
     parts = []
     for col in TALENT_COLS:
         val = row.get(col)
@@ -319,48 +318,45 @@ def _build_talent_name(row: pd.Series) -> str | None:
     return result[:255] if result else None
 
 
-def merge_excel_data(
+def merge_enrollment_data(
     df: pd.DataFrame,
-    excel_path: str | Path,
-    sheet: int | str = 0,
+    df_enrollment: pd.DataFrame,
 ) -> pd.DataFrame:
     """
-    Enrich the main DataFrame (after normalize_columns) with Excel data.
+    Enrich the main DataFrame (after normalize_columns) with enrollment DB data.
     Fills: talentname, numberofsiblings, numberofsiblingsstillstudying, sequencechild.
-    Keys: df["studentcode"] <-> excel["student_id"]
+    Keys: df["studentcode"] <-> df_enrollment["student_id"]
     """
-    from src.dgsi.staging_student.extractors.staging_student_excel import (
+    from src.dgsi.staging_student.extractors.staging_student_enrollment import (
         EXTRA_COLS,
         TALENT_COLS,
-        load_excel_data,
     )
 
-    df_excel = load_excel_data(excel_path, sheet)
     df = df.copy()
     df[KEY_COL] = df[KEY_COL].astype(str).str.strip()
 
     sql_codes = set(df[KEY_COL])
-    excel_codes = set(df_excel["student_id"])
-    overlap = sql_codes & excel_codes
+    enrollment_codes = set(df_enrollment["student_id"])
+    overlap = sql_codes & enrollment_codes
 
     logger.info(
-        "Excel merge: %d SQL codes, %d Excel codes, %d overlap",
-        len(sql_codes), len(excel_codes), len(overlap),
+        "Enrollment merge: %d SQL codes, %d enrollment codes, %d overlap",
+        len(sql_codes), len(enrollment_codes), len(overlap),
     )
     if not overlap:
-        logger.warning("No matching studentCode between SQL and Excel. Sample SQL: %s", sorted(sql_codes)[:5])
-        logger.warning("Sample Excel: %s", sorted(excel_codes)[:5])
+        logger.warning("No matching studentCode between SQL and enrollment DB. Sample SQL: %s", sorted(sql_codes)[:5])
+        logger.warning("Sample enrollment: %s", sorted(enrollment_codes)[:5])
 
-    df = df.merge(df_excel, left_on=KEY_COL, right_on="student_id", how="left")
+    df = df.merge(df_enrollment, left_on=KEY_COL, right_on="student_id", how="left")
 
     df["talentname"] = df.apply(_build_talent_name, axis=1)
 
-    for excel_col, target_col in EXTRA_COLS.items():
-        if excel_col in df.columns:
+    for enrollment_col, target_col in EXTRA_COLS.items():
+        if enrollment_col in df.columns:
             if target_col in df.columns:
-                df[target_col] = df[excel_col].where(df[excel_col].notna(), df[target_col])
+                df[target_col] = df[enrollment_col].where(df[enrollment_col].notna(), df[target_col])
             else:
-                df[target_col] = df[excel_col]
+                df[target_col] = df[enrollment_col]
 
     drop_cols = (
         ["student_id"]

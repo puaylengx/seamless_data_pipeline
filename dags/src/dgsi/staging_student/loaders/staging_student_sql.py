@@ -155,6 +155,41 @@ def ensure_target_table(
         )
 
 
+def ensure_target_columns(
+    conn,
+    schema: str,
+    table: str,
+    df_columns: List[str],
+    key_col: str,
+):
+    """
+    เพิ่มคอลัมน์ที่มีใน df แต่ยังไม่มีในตาราง target (NVARCHAR(MAX) NULL)
+    กันเคสตารางเดิมไม่มีคอลัมน์ใหม่ (เช่น studentStatusName) แล้ว MERGE ข้ามคอลัมน์นั้นทิ้ง
+    """
+    target_fqn = f"[{schema}].[{table}]"
+
+    existing = conn.execute(
+        text("""
+            SELECT COLUMN_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA=:s AND TABLE_NAME=:t
+            """),
+        {"s": schema, "t": table},
+    ).fetchall()
+    existing_lower = {r[0].lower() for r in existing}
+
+    skip = {key_col.lower(), "_row_order"}
+    for c in df_columns:
+        lc = c.lower()
+        if lc in skip or lc in existing_lower:
+            continue
+        logger.info("➕ Adding missing target column [%s] NVARCHAR(MAX) NULL", c)
+        conn.execute(
+            text(f"ALTER TABLE {target_fqn} ADD [{c}] NVARCHAR(MAX) NULL;")
+        )
+        existing_lower.add(lc)
+
+
 # -------------------------
 # merge one batch + audit diff (FIXED)
 # -------------------------

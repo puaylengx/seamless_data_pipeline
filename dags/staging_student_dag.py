@@ -36,6 +36,7 @@ from src.dgsi.staging_student.transformers.staging_student import (
 from src.dgsi.staging_student.loaders.staging_student_sql import (
     upload_temp_table,
     ensure_target_table,
+    ensure_target_columns,
     merge_all_in_batches,
     drop_temp_table,
 )
@@ -201,6 +202,14 @@ def staging_student_etl():
 
         with tgt_engine.begin() as conn:
             ensure_target_table(
+                conn,
+                schema,
+                job.target_table,
+                df_columns=list(df.columns),
+                key_col=job.key_col,
+            )
+            # เพิ่มคอลัมน์ที่ตารางเดิมยังไม่มี (เช่น studentStatusName) กัน MERGE ข้ามทิ้ง
+            ensure_target_columns(
                 conn,
                 schema,
                 job.target_table,

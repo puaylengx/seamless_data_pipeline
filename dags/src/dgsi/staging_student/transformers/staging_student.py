@@ -33,6 +33,40 @@ def _noop_audit(_: Dict[str, Any]) -> None:
     return
 
 
+STATUS_COL = "studentstatusname"
+
+
+def _log_status_trace(df: pd.DataFrame, stage: str) -> None:
+    """
+    log สถานะคอลัมน์ studentstatusname ที่แต่ละ step:
+    - total = จำนวนแถว
+    - filled = แถวที่ studentstatusname ไม่ว่าง
+    - empty  = แถวที่ว่าง/หาย (ควรเป็น 0 ตลอดเส้น)
+    """
+    if STATUS_COL not in df.columns:
+        logger.warning("STATUS_TRACE [%-18s] col '%s' MISSING (rows=%d)", stage, STATUS_COL, len(df))
+        return
+
+    s = df[STATUS_COL]
+    total = len(df)
+    filled = int((s.notna() & (s.astype(str).str.strip() != "")).sum())
+    empty = total - filled
+    logger.info(
+        "STATUS_TRACE [%-18s] rows=%d filled=%d empty=%d", stage, total, filled, empty
+    )
+    if empty:
+        sample = (
+            df.loc[
+                s.isna() | (s.astype(str).str.strip() == ""),
+                KEY_COL if KEY_COL in df.columns else df.columns[0],
+            ]
+            .astype(str)
+            .head(10)
+            .tolist()
+        )
+        logger.warning("STATUS_TRACE [%-18s] empty sample keys=%s", stage, sample)
+
+
 def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
     """
     Normalize column names → lowercase + underscore
@@ -197,7 +231,11 @@ def fallback_thai_names(df: pd.DataFrame, audit_writer: Callable[[Dict[str, Any]
     for th_col, en_col in name_pairs:
         if th_col in df.columns and en_col in df.columns:
             before = df[th_col].astype(str)
-            df[th_col] = df.apply(lambda r: fallback_th(r[th_col], r[en_col]), axis=1)
+
+            # vectorized: มีอักษรไทยจริง → ใช้ค่าไทย, ไม่งั้น fallback เป็น EN
+            th_str = df[th_col].where(df[th_col].notna(), "").astype(str)
+            has_thai = th_str.str.contains(THAI_REGEX.pattern, regex=True)
+            df[th_col] = df[th_col].where(has_thai, df[en_col])
 
             changed = (before.fillna("") != df[th_col].astype(str).fillna(""))
             c = int(changed.sum())
@@ -258,6 +296,7 @@ def transform_staging_student(
 
     # normalize
     df = normalize_columns(df)
+    _log_status_trace(df, "after_normalize")
 
     # ถ้าไม่มี key ให้คืนไป (ให้ loader ตัดสิน)
     if KEY_COL not in df.columns:
@@ -266,12 +305,14 @@ def transform_staging_student(
     # merge enrollment DB data (talent + extra columns)
     if df_enrollment is not None and not df_enrollment.empty:
         df = merge_enrollment_data(df, df_enrollment)
+        _log_status_trace(df, "after_enrollment")
     else:
         logger.warning("df_enrollment not provided, skipping enrollment merge")
 
     # drop bad keys
     df, dropped = drop_bad_keys(df, audit_writer)
     metrics["dropped"] += dropped
+    _log_status_trace(df, "after_drop_keys")
 
     # fix emails
     df, fixed = fix_emails(df, audit_writer)
@@ -280,6 +321,7 @@ def transform_staging_student(
     # fill status + drop statusname
     df, fixed = fill_studentstatus(df, audit_writer)
     metrics["fixed"] += fixed
+    _log_status_trace(df, "after_fill_status")
 
     # fallback Thai names
     df, fixed = fallback_thai_names(df, audit_writer)
@@ -288,6 +330,7 @@ def transform_staging_student(
     # drop duplicates
     df, dropped = drop_duplicates_by_key(df)
     metrics["dropped"] += dropped
+    _log_status_trace(df, "final")
 
     return df.reset_index(drop=True), metrics
 

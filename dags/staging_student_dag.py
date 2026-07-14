@@ -16,7 +16,7 @@ from airflow.hooks.base import BaseHook
 # ------------------------------------------------------------------
 # Project config / helpers
 # ------------------------------------------------------------------
-from src.config import DATA_DIR, get_conn, get_job_config_staging, get_staging_student_excel_path
+from src.config import DATA_DIR, get_conn, get_job_config_staging, get_staging_student_enrollment_conn_id
 from src.helpers.audit import write_audit_line
 from src.helpers.emailer import load_email_config_from_env, send_summary_email
 
@@ -26,6 +26,9 @@ from src.helpers.emailer import load_email_config_from_env, send_summary_email
 from src.dgsi.staging_student.extractors.staging_student_sql_server import (
     build_engine_from_airflow_conn,
     extract_staging_student,
+)
+from src.dgsi.staging_student.extractors.staging_student_enrollment import (
+    extract_enrollment_data,
 )
 from src.dgsi.staging_student.transformers.staging_student import (
     transform_staging_student,
@@ -93,16 +96,18 @@ def staging_student_etl():
     @task()
     def transform_file(raw_path: str) -> dict:
         """
-        Data quality + normalize + merge Excel (talent/extra columns)
+        Data quality + normalize + merge enrollment DB data (talent/extra columns)
         """
         df = pd.read_parquet(raw_path)
 
-        excel_path = get_staging_student_excel_path()
+        enrollment_conn_id = get_staging_student_enrollment_conn_id()
+        enrollment_conn = BaseHook.get_connection(enrollment_conn_id)
+        df_enrollment = extract_enrollment_data(enrollment_conn)
 
         df_clean, metrics = transform_staging_student(
             df,
             audit_writer=write_audit_line,
-            excel_path=excel_path,
+            df_enrollment=df_enrollment,
         )
 
         out_path = (

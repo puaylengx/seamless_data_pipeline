@@ -5,11 +5,27 @@ from datetime import datetime
 from typing import List, Tuple, Callable, Optional, Dict
 
 import pandas as pd
-from sqlalchemy import text
+from sqlalchemy import event, text
 from sqlalchemy.dialects.mssql import NVARCHAR as MSSQL_NVARCHAR
 
 logger = logging.getLogger("airflow.task")
 AuditWriter = Optional[Callable[[dict], None]]
+
+
+def _ensure_fast_executemany(engine) -> None:
+    """
+    เปิด pyodbc fast_executemany บน engine (insert แบบ batch แทนทีละแถว)
+    - register ครั้งเดียวต่อ engine (กัน listener ซ้ำ)
+    """
+    if getattr(engine, "_fast_executemany_enabled", False):
+        return
+
+    @event.listens_for(engine, "before_cursor_execute")
+    def _set_fast(conn, cursor, statement, parameters, context, executemany):
+        if executemany:
+            cursor.fast_executemany = True
+
+    engine._fast_executemany_enabled = True
 
 
 # -------------------------
@@ -62,6 +78,9 @@ def upload_temp_table(
     if "_row_order" in dtype_map:
         dtype_map["_row_order"] = MSSQL_NVARCHAR(50)
 
+    # insert แบบ batch (เร็วกว่าทีละแถวมาก) + คุมขนาด batch กัน memory
+    _ensure_fast_executemany(tgt_engine)
+
     df.to_sql(
         name=temp_table,
         con=tgt_engine,
@@ -69,6 +88,7 @@ def upload_temp_table(
         if_exists="replace",
         index=False,
         dtype=dtype_map,
+        chunksize=1000,
     )
     logger.info("📤 Uploaded temp table %s.%s rows=%s", schema, temp_table, len(df))
 

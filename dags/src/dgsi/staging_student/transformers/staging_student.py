@@ -154,9 +154,9 @@ def fix_emails(df: pd.DataFrame, audit_writer: Callable[[Dict[str, Any]], None])
 
 def fill_studentstatus(df: pd.DataFrame, audit_writer: Callable[[Dict[str, Any]], None]) -> Tuple[pd.DataFrame, int]:
     """
-    ถ้ามีทั้ง studentstatus และ studentstatusname:
-    - เติม studentstatus ที่เป็น null ด้วย studentstatusname
-    - แล้ว drop studentstatusname ทิ้ง (เหมือน main.py เดิม)
+    เติม studentstatus ที่เป็น null ด้วย studentstatusname (เฉพาะเมื่อมีคอลัมน์ studentstatus ดิบ)
+    หมายเหตุ: studentstatusname ต้องคง flow ไปถึง loader เสมอ (มาจาก query โดยตรง)
+    → drop เฉพาะกรณีที่มีคอลัมน์ studentstatus ดิบมารองรับจริง ไม่ใช่ลบทิ้งทุกครั้ง
     return (df_clean, fixed_count)
     """
     df = df.copy()
@@ -174,8 +174,7 @@ def fill_studentstatus(df: pd.DataFrame, audit_writer: Callable[[Dict[str, Any]]
                     KEY_COL: sid,
                 })
 
-    # drop ทิ้งเสมอถ้ามี (กัน MERGE อ้าง column ที่ไม่มีใน target)
-    if "studentstatusname" in df.columns:
+        # มี studentstatus ดิบอยู่แล้ว → drop studentstatusname ได้
         df = df.drop(columns=["studentstatusname"])
 
     return df, fixed
@@ -247,7 +246,7 @@ def transform_staging_student(
     - merge enrollment DB data (talent + extra columns) ถ้าส่ง df_enrollment มา
     - clean/drop bad keys
     - clean emails
-    - fill studentstatus from studentstatusname แล้ว drop studentstatusname
+    - fill studentstatus from studentstatusname (เฉพาะเมื่อมี studentstatus ดิบ); คง studentstatusname ไว้เสมอ
     - fallback Thai names
     - drop duplicates by key
     - return (df_clean, metrics)

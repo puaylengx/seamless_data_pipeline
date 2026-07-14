@@ -76,6 +76,7 @@ x-airflow-common:
     # _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     _PIP_ADDITIONAL_REQUIREMENTS: >
       apache-airflow-providers-microsoft-mssql>=4.4.0
+      openpyxl>=3.1.0
     # apache-airflow-providers-smtp==5.*
 
     AIRFLOW__SMTP__SMTP_HOST: ${SMTP_HOST}

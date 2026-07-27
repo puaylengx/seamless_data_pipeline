@@ -339,6 +339,11 @@ def transform_staging_student(
 # 5) Enrollment merge helpers
 # ============================================================
 
+# prefix ชั่วคราวของคอลัมน์ฝั่ง enrollment ระหว่าง merge
+# กันชื่อชนกับคอลัมน์ฝั่ง SQL (เช่น email) และทำให้ drop ทิ้งทีเดียวได้ครบ
+ENROLLMENT_PREFIX = "_enr_"
+
+
 def _clean_item(s: str) -> str:
     s = s.strip()
     if s.startswith("- "):
@@ -346,18 +351,67 @@ def _clean_item(s: str) -> str:
     return "" if s in ("-", "") else s.strip()
 
 
-def _build_talent_name(row: pd.Series) -> str | None:
-    from src.dgsi.staging_student.extractors.staging_student_enrollment import TALENT_COLS
-    parts = []
-    for col in TALENT_COLS:
-        val = row.get(col)
-        if pd.notna(val) and str(val).strip():
-            for item in str(val).replace("\r\n", "\n").split("\n"):
-                cleaned = _clean_item(item)
-                if cleaned:
-                    parts.append(cleaned)
-    result = ", ".join(parts)
-    return result[:255] if result else None
+def _build_talent_series(df: pd.DataFrame, talent_cols: list[str]) -> pd.Series:
+    """
+    รวมทุกคอลัมน์ talent_* เป็นสตริงเดียว คั่นด้วย ", "
+    - แต่ละคอลัมน์อาจมีหลายรายการคั่นด้วย newline
+    - ตัด bullet "- " และรายการว่าง/"-" ทิ้ง
+    """
+    cols = [c for c in talent_cols if c in df.columns]
+    if not cols:
+        return pd.Series([None] * len(df), index=df.index, dtype="object")
+
+    sub = df[cols].where(df[cols].notna(), "").astype(str)
+
+    # ต่อทุกคอลัมน์เข้าด้วยกันก่อน (vectorized) แล้วค่อย clean ทีเดียวต่อแถว
+    joined = sub[cols[0]]
+    for c in cols[1:]:
+        joined = joined.str.cat(sub[c], sep="\n")
+
+    def _clean_row(raw: str) -> str | None:
+        parts = [
+            cleaned
+            for item in raw.replace("\r\n", "\n").split("\n")
+            if (cleaned := _clean_item(item))
+        ]
+        result = ", ".join(parts)
+        return result[:255] if result else None
+
+    return joined.map(_clean_row)
+
+
+def _is_blank(s: pd.Series) -> pd.Series:
+    """แถวที่ถือว่า 'ไม่มีค่า' → NaN/None หรือสตริงว่าง"""
+    return s.isna() | (s.astype(str).str.strip() == "")
+
+
+def _fill_if_blank(df: pd.DataFrame, target_col: str, values: pd.Series) -> None:
+    """
+    เติมค่าจาก enrollment เฉพาะตอนที่ฝั่ง SQL ว่าง (SQL ชนะเมื่อมีค่าทั้งคู่)
+    """
+    if target_col not in df.columns:
+        df[target_col] = values
+        return
+    df[target_col] = df[target_col].where(~_is_blank(df[target_col]), values)
+
+
+def _resolve_option(df: pd.DataFrame, base_col: str, option_suffix: str) -> pd.Series:
+    """
+    ค่าหลักเป็น "Other" (หรือว่าง) และมีข้อความใน <base>_option → ใช้ค่าใน _option แทน
+    """
+    base = df[base_col] if base_col in df.columns else pd.Series(
+        [None] * len(df), index=df.index, dtype="object"
+    )
+
+    option_col = base_col + option_suffix
+    if option_col not in df.columns:
+        return base
+
+    option = df[option_col]
+    use_option = ~_is_blank(option) & (
+        _is_blank(base) | (base.astype(str).str.strip().str.lower() == "other")
+    )
+    return base.where(~use_option, option)
 
 
 def merge_enrollment_data(
@@ -366,19 +420,28 @@ def merge_enrollment_data(
 ) -> pd.DataFrame:
     """
     Enrich the main DataFrame (after normalize_columns) with enrollment DB data.
-    Fills: talentname, numberofsiblings, numberofsiblingsstillstudying, sequencechild.
+    Fills: talentname, numberofsiblings, numberofsiblingsstillstudying, sequencechild,
+           religionname, racename, maritalstatusname.
     Keys: df["studentcode"] <-> df_enrollment["student_id"]
+
+    หลักการ: ค่าจาก staging_student.sql ชนะเสมอ — enrollment เติมเฉพาะช่องที่ว่าง
+    และคอลัมน์ฝั่ง enrollment ทั้งหมดถูก drop ทิ้งหลัง merge (ไม่ให้หลุดไป target table)
     """
     from src.dgsi.staging_student.extractors.staging_student_enrollment import (
         EXTRA_COLS,
+        FILL_COLS,
+        OPTION_SUFFIX,
         TALENT_COLS,
+    )
+    from src.dgsi.staging_student.extractors.staging_student_enrollment import (
+        KEY_COL as ENR_KEY_COL,
     )
 
     df = df.copy()
     df[KEY_COL] = df[KEY_COL].astype(str).str.strip()
 
     sql_codes = set(df[KEY_COL])
-    enrollment_codes = set(df_enrollment["student_id"])
+    enrollment_codes = set(df_enrollment[ENR_KEY_COL])
     overlap = sql_codes & enrollment_codes
 
     logger.info(
@@ -389,27 +452,32 @@ def merge_enrollment_data(
         logger.warning("No matching studentCode between SQL and enrollment DB. Sample SQL: %s", sorted(sql_codes)[:5])
         logger.warning("Sample enrollment: %s", sorted(enrollment_codes)[:5])
 
-    df = df.merge(df_enrollment, left_on=KEY_COL, right_on="student_id", how="left")
+    p = ENROLLMENT_PREFIX
+    right = df_enrollment.rename(columns={c: p + c for c in df_enrollment.columns})
+    df = df.merge(right, left_on=KEY_COL, right_on=p + ENR_KEY_COL, how="left")
 
-    df["talentname"] = df.apply(_build_talent_name, axis=1)
+    _fill_if_blank(df, "talentname", _build_talent_series(df, [p + c for c in TALENT_COLS]))
 
     for enrollment_col, target_col in EXTRA_COLS.items():
-        if enrollment_col in df.columns:
-            if target_col in df.columns:
-                df[target_col] = df[enrollment_col].where(df[enrollment_col].notna(), df[target_col])
-            else:
-                df[target_col] = df[enrollment_col]
+        if p + enrollment_col in df.columns:
+            _fill_if_blank(df, target_col, df[p + enrollment_col])
 
-    drop_cols = (
-        ["student_id"]
-        + [c for c in TALENT_COLS if c in df.columns]
-        + [c for c in EXTRA_COLS if c in df.columns]
-    )
-    df.drop(columns=drop_cols, errors="ignore", inplace=True)
+    for enrollment_col, target_col in FILL_COLS.items():
+        _fill_if_blank(df, target_col, _resolve_option(df, p + enrollment_col, OPTION_SUFFIX))
 
-    filled = df["talentname"].notna().sum()
-    logger.info(
-        "talentName filled: %d / %d rows (%.1f%%)",
-        filled, len(df), 100 * filled / len(df) if len(df) else 0,
+    # drop ทุกคอลัมน์ที่มาจากฝั่ง enrollment ไม่ให้หลุดไปถึง target table
+    df.drop(
+        columns=[c for c in df.columns if c.startswith(p)],
+        errors="ignore",
+        inplace=True,
     )
+
+    for col in ["talentname", *EXTRA_COLS.values(), *FILL_COLS.values()]:
+        if col in df.columns:
+            filled = int((~_is_blank(df[col])).sum())
+            logger.info(
+                "%s filled: %d / %d rows (%.1f%%)",
+                col, filled, len(df), 100 * filled / len(df) if len(df) else 0,
+            )
+
     return df

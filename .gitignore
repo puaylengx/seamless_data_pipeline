@@ -5,6 +5,8 @@
 
 # ห้าม commit credentials
 .env
+scripts/*.env
+!scripts/*.env.example
 
 __pycache__
 *.pyc

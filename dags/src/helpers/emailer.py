@@ -100,6 +100,42 @@ def load_email_config_from_env(conn_id: str = "smtp_default") -> EmailConfig:
     return cfg
 
 
+def _send_html(subject: str, body: str, email_cfg: EmailConfig):
+    """ส่ง HTML mail พร้อม retry 3 ครั้ง (ใช้ร่วมกันทั้งเมลสรุปและเมลแจ้ง error)"""
+    msg = MIMEMultipart("alternative")
+    msg["From"] = formataddr((email_cfg.from_name, email_cfg.username))
+    msg["To"] = email_cfg.alert_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "html", "utf-8"))
+
+    for attempt in range(3):
+        try:
+            if email_cfg.port == 465:
+                with smtplib.SMTP_SSL(
+                    email_cfg.host, email_cfg.port, timeout=10
+                ) as server:
+                    server.login(email_cfg.username, email_cfg.password)
+                    server.sendmail(
+                        email_cfg.username, email_cfg.recipients, msg.as_string()
+                    )
+            else:
+                with smtplib.SMTP(email_cfg.host, email_cfg.port, timeout=10) as server:
+                    server.starttls()
+                    server.login(email_cfg.username, email_cfg.password)
+                    server.sendmail(
+                        email_cfg.username, email_cfg.recipients, msg.as_string()
+                    )
+
+            logger.info("📧 ส่งอีเมลสำเร็จ → %s", email_cfg.alert_email)
+            return
+        except Exception:
+            if attempt < 2:
+                logger.warning("⚠️ ส่งอีเมลล้มเหลว (%s/3) กำลังลองใหม่...", attempt + 1)
+                time.sleep(3)
+            else:
+                logger.exception("❌ ส่งอีเมลไม่สำเร็จหลัง retry 3 ครั้ง")
+
+
 def send_summary_email(
     result: dict, email_cfg: EmailConfig, updated_rows_sample: list | None = None
 ):
@@ -301,36 +337,131 @@ def send_summary_email(
       </html>
     """
 
-    # --------- Compose & Send with retry ----------
-    msg = MIMEMultipart("alternative")
-    msg["From"] = formataddr((email_cfg.from_name, email_cfg.username))
-    msg["To"] = email_cfg.alert_email
-    msg["Subject"] = subject
-    msg.attach(MIMEText(body, "html", "utf-8"))
+    _send_html(subject, body, email_cfg)
 
-    for attempt in range(3):
-        try:
-            if email_cfg.port == 465:
-                with smtplib.SMTP_SSL(
-                    email_cfg.host, email_cfg.port, timeout=10
-                ) as server:
-                    server.login(email_cfg.username, email_cfg.password)
-                    server.sendmail(
-                        email_cfg.username, email_cfg.recipients, msg.as_string()
-                    )
-            else:
-                with smtplib.SMTP(email_cfg.host, email_cfg.port, timeout=10) as server:
-                    server.starttls()
-                    server.login(email_cfg.username, email_cfg.password)
-                    server.sendmail(
-                        email_cfg.username, email_cfg.recipients, msg.as_string()
-                    )
 
-            logger.info("📧 ส่งอีเมลสรุปสำเร็จ → %s", email_cfg.alert_email)
-            break
-        except Exception:
-            if attempt < 2:
-                logger.warning("⚠️ ส่งอีเมลล้มเหลว (%s/3) กำลังลองใหม่...", attempt + 1)
-                time.sleep(3)
-            else:
-                logger.exception("❌ ส่งอีเมลไม่สำเร็จหลัง retry 3 ครั้ง")
+# =========================================================
+# Failure alert (ใช้เป็น on_failure_callback ของทุก DAG)
+# =========================================================
+def _failure_log_url(ti) -> str:
+    """หา URL ของ log ให้ดีที่สุดเท่าที่ทำได้ (Airflow 2/3 คนละ attribute)"""
+    url = getattr(ti, "log_url", "") or ""
+    if url:
+        return url
+
+    base = (
+        os.getenv("AIRFLOW__API__BASE_URL", "")
+        or os.getenv("AIRFLOW__WEBSERVER__BASE_URL", "")
+        or os.getenv("AIRFLOW_BASE_URL", "")
+    ).rstrip("/")
+    dag_id = getattr(ti, "dag_id", "")
+    if not (base and dag_id):
+        return ""
+    return f"{base}/dags/{dag_id}/runs/{getattr(ti, 'run_id', '')}/tasks/{getattr(ti, 'task_id', '')}"
+
+
+def build_failure_email(context: dict) -> tuple[str, str]:
+    """สร้าง (subject, html) จาก Airflow task context — แยกออกมาเพื่อเทสต์ได้โดยไม่ต้องส่งเมล"""
+    ti = context.get("ti") or context.get("task_instance")
+    exc = context.get("exception")
+
+    dag_id = getattr(ti, "dag_id", "") or str(context.get("dag_id", "unknown"))
+    task_id = getattr(ti, "task_id", "") or "unknown"
+    run_id = getattr(ti, "run_id", "") or str(context.get("run_id", ""))
+    try_number = getattr(ti, "try_number", "") or context.get("try_number", "")
+    when = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_url = _failure_log_url(ti)
+
+    err_type = type(exc).__name__ if exc else "Unknown"
+    err_msg = str(exc) if exc else "ไม่มีรายละเอียด error"
+    if len(err_msg) > 4000:
+        err_msg = err_msg[:4000] + "\n... (ตัดข้อความ)"
+
+    subject = f"🔴 FAILED {dag_id}.{task_id} — {when}"
+
+    rows = "".join(
+        f"""<tr>
+              <td style="padding:8px 12px; border-bottom:1px solid #eee; color:#6c757d; white-space:nowrap;">{_html.escape(k)}</td>
+              <td style="padding:8px 12px; border-bottom:1px solid #eee; font-weight:600;">{_html.escape(str(v))}</td>
+            </tr>"""
+        for k, v in [
+            ("DAG", dag_id),
+            ("Task", task_id),
+            ("Run ID", run_id),
+            ("ครั้งที่ลอง", try_number),
+            ("เวลา", when),
+        ]
+    )
+
+    log_btn = (
+        f'<a href="{_html.escape(log_url)}" style="display:inline-block; background:#dc3545; color:#fff; '
+        f'text-decoration:none; padding:10px 14px; border-radius:8px; font-weight:600; font-size:13px;">📄 เปิด Log</a>'
+        if log_url
+        else '<div style="color:#6c757d; font-size:12px;">* ดู log ได้ที่ Airflow UI</div>'
+    )
+
+    body = f"""\
+<!DOCTYPE html>
+<html lang="th">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"/><title>Task Failed</title></head>
+<body style="margin:0; padding:0; background:#f6f7fb; font-family:Segoe UI, Arial, Helvetica, sans-serif; color:#212529;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f7fb; padding:20px 0;">
+  <tr><td align="center">
+    <table role="presentation" width="720" cellpadding="0" cellspacing="0"
+           style="background:#fff; width:720px; max-width:720px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,.06); overflow:hidden;">
+      <tr>
+        <td style="background:#dc3545; padding:20px 24px; color:#fff;">
+          <div style="font-size:20px; font-weight:700;">Task Failed</div>
+          <div style="opacity:.9; font-size:13px; margin-top:4px;">{_html.escape(dag_id)} → {_html.escape(task_id)}</div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:16px 24px 0 24px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                 style="border-collapse:collapse; border:1px solid #e9ecef; border-radius:8px; overflow:hidden; font-size:13px;">
+            {rows}
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:16px 24px 0 24px;">
+          <div style="font-weight:700; margin-bottom:8px;">⚠️ {_html.escape(err_type)}</div>
+          <pre style="background:#fff5f5; border:1px solid #ffd7d7; border-radius:8px; padding:14px; margin:0;
+                      font-size:12px; line-height:1.6; white-space:pre-wrap; word-break:break-word; color:#842029;">{_html.escape(err_msg)}</pre>
+        </td>
+      </tr>
+      <tr><td style="padding:16px 24px 0 24px;">{log_btn}</td></tr>
+      <tr>
+        <td style="padding:18px 24px 22px 24px; color:#6c757d; font-size:12px;">
+          แจ้งเตือนอัตโนมัติจาก Airflow — on_failure_callback
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>
+"""
+    return subject, body
+
+
+def task_failure_alert(context: dict) -> None:
+    """
+    ใช้เป็น on_failure_callback ใน default_args ของ DAG:
+
+        default_args={"retries": 2, "on_failure_callback": task_failure_alert}
+
+    ยิงเมลเมื่อ task fail จริง (หลัง retry หมดแล้ว) ต่างจาก task notify ปกติ
+    ที่จะถูก skip ไปเมื่อ task ต้นทางพัง
+
+    callback นี้ต้องไม่ throw เด็ดขาด ไม่งั้นจะกลบ error ตัวจริง
+    """
+    try:
+        subject, body = build_failure_email(context)
+        cfg = load_email_config_from_env()
+        if not cfg.is_ready():
+            logger.warning("⚠️ ข้ามการส่งเมลแจ้ง error: SMTP config ไม่ครบ")
+            return
+        _send_html(subject, body, cfg)
+    except Exception:
+        logger.exception("❌ task_failure_alert ล้มเหลว (ไม่กระทบ error เดิมของ task)")

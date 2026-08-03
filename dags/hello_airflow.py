@@ -3,6 +3,8 @@ from airflow import DAG
 from airflow.providers.standard.operators.python import PythonOperator
 import pendulum
 
+from src.helpers.emailer import task_failure_alert
+
 def hello():
     print("Hello Juntima!")
 
@@ -12,6 +14,7 @@ with DAG(
     start_date=pendulum.datetime(2025,3,1, tz="Asia/Bangkok"),
     schedule="@daily", # กำหนดรอบการทำงาน ของ task
     catchup=False,
+    default_args={"on_failure_callback": task_failure_alert}, # task fail → ส่งเมลแจ้ง
 ) as dag:
     # งานนึงใน workflow
     task = PythonOperator(

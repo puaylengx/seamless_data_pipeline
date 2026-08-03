@@ -20,7 +20,7 @@ from src.dgsi.finance_invoice.loaders.finance_invoice_sql import (
 from src.helpers.audit import write_audit_line
 
 # for send email
-from src.helpers.emailer import load_email_config_from_env, send_summary_email
+from src.helpers.emailer import load_email_config_from_env, send_summary_email, task_failure_alert
 
 TZ = "Asia/Bangkok"
 
@@ -31,7 +31,7 @@ TZ = "Asia/Bangkok"
     schedule="00 15 * * 5", # นาที  ชั่วโมง  วันของเดือน  เดือน  วันของสัปดาห์
     catchup=False,
     tags=["finance", "etl"],
-    default_args={"retries": 2},
+    default_args={"retries": 2, "on_failure_callback": task_failure_alert},
 )
 
 def finance_invoice_etl():

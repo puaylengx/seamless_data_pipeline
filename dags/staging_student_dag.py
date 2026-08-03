@@ -18,7 +18,7 @@ from airflow.hooks.base import BaseHook
 # ------------------------------------------------------------------
 from src.config import DATA_DIR, get_conn, get_job_config_staging, get_staging_student_enrollment_conn_id
 from src.helpers.audit import write_audit_line
-from src.helpers.emailer import load_email_config_from_env, send_summary_email
+from src.helpers.emailer import load_email_config_from_env, send_summary_email, task_failure_alert
 
 # ------------------------------------------------------------------
 # Pipeline modules
@@ -54,7 +54,7 @@ TZ = "Asia/Bangkok"
     # schedule="@weekly",
     schedule="00 15 * * 5",  # นาที  ชั่วโมง  วันของเดือน  เดือน  วันของสัปดาห์
     catchup=False,
-    default_args={"retries": 2},
+    default_args={"retries": 2, "on_failure_callback": task_failure_alert},
     tags=["dgsi", "staging", "student", "staging-style"],
 )
 def staging_student_etl():

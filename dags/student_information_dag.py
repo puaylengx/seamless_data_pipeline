@@ -27,7 +27,7 @@ from src.education.student_information.loaders.student_information_bigquery impo
 
 # helper กลาง
 from src.helpers.audit import write_audit_line
-from src.helpers.emailer import load_email_config_from_env, send_summary_email
+from src.helpers.emailer import load_email_config_from_env, send_summary_email, task_failure_alert
 
 logger = logging.getLogger("airflow.task")
 TZ = "Asia/Bangkok"
@@ -39,7 +39,7 @@ TZ = "Asia/Bangkok"
     schedule="0 5 * * *", # นาที  ชั่วโมง  วันของเดือน  เดือน  วันของสัปดาห์
     catchup=False,
     tags=["education", "student_information", "etl", "standard"],
-    default_args={"retries": 2},
+    default_args={"retries": 2, "on_failure_callback": task_failure_alert},
     params={
         "write_disposition": "WRITE_TRUNCATE",
         # กันเคสดึงข้อมูลตอน dbo.StagingStudent ยังไม่พร้อม แล้วเอา NULL ไปทับของดีใน BQ

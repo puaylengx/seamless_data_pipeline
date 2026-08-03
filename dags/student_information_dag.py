@@ -42,6 +42,9 @@ TZ = "Asia/Bangkok"
     default_args={"retries": 2},
     params={
         "write_disposition": "WRITE_TRUNCATE",
+        # กันเคสดึงข้อมูลตอน dbo.StagingStudent ยังไม่พร้อม แล้วเอา NULL ไปทับของดีใน BQ
+        # รอบปกติได้ ~13,260 แถว รอบที่ join ไม่ติดได้ 5,126 แถว
+        "min_expected_rows": 10000,
     },
 )
 def student_information_etl():
@@ -107,7 +110,8 @@ def student_information_etl():
             return report
 
         # ถ้า validate_student_information โยน exception ให้ถือว่า fail
-        validate_student_information(df)
+        min_rows = int(get_current_context()["params"].get("min_expected_rows", 1))
+        validate_student_information(df, min_rows=min_rows)
 
         report = {"ok": True, "rows": int(len(df)), "path": clean_path, "issues": []}
         logger.info("✅ Validation passed for %s records", len(df))

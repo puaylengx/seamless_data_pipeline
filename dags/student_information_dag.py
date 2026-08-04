@@ -11,7 +11,7 @@ import pandas as pd
 import logging
 
 from airflow.decorators import dag, task
-from airflow.sdk import get_current_context
+from airflow.sdk import get_current_context, PokeReturnValue
 from airflow.exceptions import AirflowFailException
 
 # ---- Import โมดูลของเรา ----
@@ -24,6 +24,7 @@ from src.education.student_information.extractors.student_information_sql_server
 from src.education.student_information.transformers.student_information import transform_student_information
 from src.education.student_information.validators.student_information import validate_student_information
 from src.education.student_information.loaders.student_information_bigquery import load_dataframe_to_bq_upsert_with_counts
+from src.education.student_information.sensors.staging_student_ready import check_staging_student_ready
 
 # helper กลาง
 from src.helpers.audit import write_audit_line
@@ -45,13 +46,33 @@ TZ = "Asia/Bangkok"
         # กันเคสดึงข้อมูลตอน dbo.StagingStudent ยังไม่พร้อม แล้วเอา NULL ไปทับของดีใน BQ
         # รอบปกติได้ ~13,260 แถว รอบที่ join ไม่ติดได้ 5,126 แถว
         "min_expected_rows": 10000,
+        # sensor จะรอจนกว่านักศึกษาอย่างน้อยเท่านี้จะหา programCode เจอใน StagingStudent
+        "min_staging_match_ratio": 0.90,
     },
 )
 def student_information_etl():
     @task()
     def mark_start() -> float:
         return time.time()
-    
+
+    @task.sensor(
+        poke_interval=600,          # เช็คทุก 10 นาที
+        timeout=60 * 60 * 6,        # ยอมรอถึง 6 ชั่วโมง (06:00 → เที่ยง) เกินนั้น fail + ส่งเมล
+        mode="reschedule",          # คืน worker slot ระหว่างรอ ไม่กินทรัพยากรทั้งเช้า
+        retries=0,                  # timeout แล้วคือ fail จริง ไม่ต้อง retry ให้รออีกรอบ
+    )
+    def wait_for_staging_student() -> PokeReturnValue:
+        """
+        รอจนกว่า dbo.StagingStudent จะถูกเติมข้อมูลครบก่อนค่อย extract
+
+        ไม่ต้องรู้ว่า job ต้นทางรันกี่โมง ทนต่อการที่มันรันช้าบ้างเร็วบ้าง
+        ถ้ารอจน timeout แปลว่า job ต้นทางไม่ทำงาน ซึ่งควรมีคนรู้ → fail + เมลแจ้ง
+        """
+        ratio = float(get_current_context()["params"].get("min_staging_match_ratio", 0.90))
+        ready, stats = check_staging_student_ready(MSSQL_CONN_ID, min_match_ratio=ratio)
+        return PokeReturnValue(is_done=ready, xcom_value=stats)
+
+
     @task()
     def extract_to_file() -> str:
         """
@@ -220,7 +241,9 @@ def student_information_etl():
         send_summary_email(load_result, email_cfg, updated_samples)
 
     start_ts = mark_start()
+    staging_ready = wait_for_staging_student()
     raw_path = extract_to_file()
+    staging_ready >> raw_path      # extract ได้ก็ต่อเมื่อ StagingStudent พร้อมแล้ว
     clean_path = transform_file(raw_path)
     report = validate_file(clean_path)
     load_result = load(clean_path, report, start_ts)

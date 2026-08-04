@@ -36,7 +36,7 @@ TZ = "Asia/Bangkok"
     dag_id="student_information_pipeline",
     start_date=pendulum.datetime(2026, 3, 1, tz=TZ),
     # schedule="@daily",
-    schedule="0 5 * * *", # นาที  ชั่วโมง  วันของเดือน  เดือน  วันของสัปดาห์
+    schedule="0 6 * * *", # นาที  ชั่วโมง  วันของเดือน  เดือน  วันของสัปดาห์
     catchup=False,
     tags=["education", "student_information", "etl", "standard"],
     default_args={"retries": 2, "on_failure_callback": task_failure_alert},

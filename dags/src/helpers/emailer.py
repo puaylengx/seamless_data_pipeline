@@ -182,6 +182,11 @@ def send_summary_email(
         if invoice is not None and str(invoice).strip() != "":
             return str(invoice), "Invoice"
 
+        # fallback → generic code (เช่น user_name ของ printer solution)
+        code = u.get("code")
+        if code is not None and str(code).strip() != "":
+            return str(code), "Code"
+
         return "N/A", "Invoice"
 
     # ✅ เลือก header จากตัวแรก

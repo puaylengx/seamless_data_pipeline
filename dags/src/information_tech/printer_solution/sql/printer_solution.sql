@@ -5,8 +5,8 @@ WITH usage_data AS (
     u.department,
     u.office,
     pl.job_type,
-    pl.total_color_pages,
-    (pl.total_pages - pl.total_color_pages) AS bw_pages,
+    COALESCE(pl.total_color_pages, 0)                                  AS color_pages,
+    COALESCE(pl.total_pages, 0) - COALESCE(pl.total_color_pages, 0)    AS bw_pages,
     pl.usage_day::date AS usage_date
   FROM tbl_user AS u
   JOIN tbl_printer_usage_log AS pl
@@ -23,12 +23,12 @@ SELECT
   department,
   office,
   job_type,
-  SUM(total_color_pages)                 AS total_color_pages,
+  SUM(color_pages)                       AS total_color_pages,
   SUM(bw_pages)                          AS total_grayscale_pages,
-  SUM(total_color_pages + bw_pages)      AS total_pages,
-  SUM(total_color_pages) * 4.82          AS total_cost_color_pages,
+  SUM(color_pages + bw_pages)            AS total_pages,
+  SUM(color_pages)       * 4.82          AS total_cost_color_pages,
   SUM(bw_pages)          * 0.48          AS total_cost_grayscale_pages,
-  SUM(total_color_pages) * 4.82
+  SUM(color_pages)       * 4.82
     + SUM(bw_pages)      * 0.48          AS total_cost_pages,
   EXTRACT(YEAR  FROM usage_date)         AS usage_calendar_year,
   EXTRACT(MONTH FROM usage_date)         AS usage_calendar_month,

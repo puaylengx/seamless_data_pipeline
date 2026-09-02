@@ -20,7 +20,7 @@ from src.config import (
 from src.information_tech.printer_solution.extractors.priner_solution_postgresql import fetch_printer_solution_postgresql
 from src.information_tech.printer_solution.transformers.printer_solution import transform_printer_solution
 from src.information_tech.printer_solution.validators.printer_solution import validate_printer_solution
-from src.information_tech.printer_solution.loaders.printer_solution_bigquery import load_printer_usage_monthly_insert_only
+from src.information_tech.printer_solution.loaders.printer_solution_bigquery import load_printer_usage_monthly_upsert
 
 # helper กลาง
 from src.helpers.audit import write_audit_line
@@ -130,6 +130,7 @@ def printer_solution_etl():
                 "status": "no_data",
                 "inserted": 0,
                 "updated": 0,
+                "unchanged": 0,
                 "duration_sec": duration_sec,
                 "rows_total": 0,
                 "batches_total": 0,
@@ -149,45 +150,45 @@ def printer_solution_etl():
         if "code" not in df.columns and "user_name" in df.columns:
             df["code"] = df["user_name"]
 
-        stats = load_printer_usage_monthly_insert_only(
+        stats = load_printer_usage_monthly_upsert(
             df=df,
             project_id=GCP_PROJECT,
             dataset=PRINTER_BQ_DATASET,
             target_table=PRINTER_BQ_TABLE,
             gcp_conn_id=GCP_CONN_ID,
+            # full_name/department/office ไม่ใช่คีย์ — เป็น attribute ที่เปลี่ยนได้
+            # ถ้าใส่เป็นคีย์ คนที่ย้ายแผนกจะกลายเป็นแถวใหม่และยอดเดือนนั้นถูกนับซ้ำ
             unique_key_cols=[
                 "user_name",
-                "full_name",
-                "department",
-                "office",
                 "job_type",
                 "usage_calendar_year",
                 "usage_calendar_month",
-                "usage_budget_year",
-                "usage_budget_month_order",
             ],
-            # key_cols=["user_name"],  # หรือ key ของคุณจริง ๆ
             location="US",
         )
 
         inserted = int(stats.get("inserted", 0))
         updated = int(stats.get("updated", 0))
+        unchanged = int(stats.get("unchanged", 0))
+        updated_samples = stats.get("updated_samples", [])
 
         duration_sec = round(time.time() - start_ts, 2)
 
-        # สำหรับ BQ truncate/append เรา map metric ให้เป็นมาตรฐานเดียวกับ invoice
-        # - inserted: จำนวนแถวที่โหลดเข้า (มองเป็น inserted)
-        # - updated: 0
-        # - batches_total: 1 (โหลดครั้งเดียว)
+        # metric มาจากการเทียบ staging กับ target ก่อนเขียน
+        # (BigQuery ไม่แยก inserted/updated ให้จาก DML)
+        # - inserted:  key ที่ยังไม่เคยมีใน target
+        # - updated:   key เดิมแต่ยอด/attribute เปลี่ยน
+        # - unchanged: key เดิมและค่าเท่าเดิม
         result = {
             "status": "success",
             "subject": "Information Tech : Printer Solution",
             "inserted": inserted,
             "updated": updated,
+            "unchanged": unchanged,
             "duration_sec": duration_sec,
             "rows_total": rows_total,
             "batches_total": 1,
-            "updated_samples": [],  # BQ load ไม่มี diff per row
+            "updated_samples": updated_samples,
             "target_table": f"{GCP_PROJECT}.{PRINTER_BQ_DATASET}.{PRINTER_BQ_TABLE}",
             "run_date": run_date,
         }
@@ -198,11 +199,13 @@ def printer_solution_etl():
             "pipeline": "printer_solution",
             "action": "SUMMARY",
             "write_disposition": write_disposition,
-            **result
+            **{k: v for k, v in result.items() if k != "updated_samples"},
         })
 
-        logger.info("✅ Loaded to BigQuery %s (%s rows) disposition=%s", result["target_table"], rows_total,
-                    write_disposition)
+        logger.info(
+            "✅ Loaded to BigQuery %s — rows=%s inserted=%s updated=%s unchanged=%s",
+            result["target_table"], rows_total, inserted, updated, unchanged,
+        )
         return result
 
     @task()

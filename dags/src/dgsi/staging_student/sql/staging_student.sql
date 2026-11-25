@@ -34,7 +34,6 @@ SELECT DISTINCT
     CASE WHEN NationalityId = 93 THEN 'resident' ELSE 'non-resident' END AS residentType,
     CASE WHEN studentFeeType.NameEn = 'inbound' THEN '2' ELSE '1' END AS studentType,
     CASE
-        WHEN curri.AbbreviationEn IN ('DTDS','PYPY') THEN 'take a course with IC'
         WHEN std.StudentStatus = 'prc' THEN 'passed_all_required_courses'
         WHEN std.StudentStatus = 'pa'  THEN 'passed_away'
         WHEN std.StudentStatus = 'rs'  THEN 'resigned'
